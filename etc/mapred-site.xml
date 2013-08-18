@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+<configuration>
+
+<!-- DO NOT EDIT - THESE PROPERTIES ARE SET BY THE CONFIGURE SCRIPTS -->
+<property>
+  <name>mapred.job.tracker</name>
+  <value>MASTER:54311</value>
+  <description>The host and port that the MapReduce job tracker runs
+  at.  If "local", then jobs are run in-process as a single map
+  and reduce task.
+  </description>
+</property>
+<!-- END OF DO NOT EDIT SECTION -->
+
+<property>
+  <name>mapred.reduce.parallel.copies</name>
+  <value>4</value>
+  <description>Number of parallel copies run by reduces - set to total number of nodes in the system
+  </description>
+</property>
+
+<property>
+  <name>mapred.tasktracker.map.tasks.maximum</name>
+  <value>4</value>
+  <description>Maximum map tasks to be run simultaenously.
+  </description>
+</property>
+
+<property>
+  <name>mapred.tasktracker.reduce.tasks.maximum</name>
+  <value>2</value>
+  <description>Maximum reduce tasks to be run simultaenously.
+  </description>
+</property>
+
+<property>
+  <name>mapred.job.reuse.jvm.num.tasks</name>
+  <value>-1</value>
+  <description>Reuse the JVM between tasks
+  </description>
+</property>
+
+<property>
+  <name>mapred.child.java.opts</name>
+  <value>-Xmx1024m</value>
+  <description>Large heap-size for child JVMs of maps/reduces
+  </description>
+</property>
+</configuration>

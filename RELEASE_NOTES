@@ -1,0 +1,17 @@
+Version 0.2a
+------------
+
+We are pleased to announce the release of version 0.2a of myHadoop, which
+enables the use of Apache Hadoop in a non-dedicated cluster environment,
+being administered by typical batch scheduler. 
+
+This release adds to the 0.1 release as follows:
+* Support for the Sun Grid Engine (SGE)
+* Updated documentation for SGE and PBS
+
+Please feel free to send questions/comments/concerns to the myHadoop
+mailing list at myhadoop-users@lists.sourceforge.net. You may also send
+individual private comments to Sriram Krishnan at sriram@sdsc.edu.
+
+Sincerely,
+Sriram

@@ -1,0 +1,19 @@
+Version 0.2a
+------------
+Version 0.2a adds to the 0.1a release as follows:
+* Support for the Sun Grid Engine (SGE)
+* Updated documentation for SGE and PBS
+
+Version 0.1a
+------------
+
+We are pleased to announce the release of version 0.1a of myHadoop, which
+enables the use of Apache Hadoop in a non-dedicated cluster environment,
+being administered by typical batch scheduler. 
+
+This release supports the following features:
+* Provisioning of on-demand Hadoop clusters using PBS (Moab)
+* Ability to configure Hadoop in "persistent" and "non-persistent" modes
+* Ability to run Hadoop in regular user mode, without need any root privileges
+* Ability to tune the various configuration parameters for Hadoop.
+

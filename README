@@ -1,0 +1,16 @@
+myHadoop
+--------
+
+myHadoop enables the use of Hadoop in a non-dedicated cluster environment,
+being administered by typical batch scheduler. We are currently supporting
+the PBS (Moab) and the Sun Grid Engine (SGE) schedulers, although a port to
+a scheduler such as Condor would be very trivial.
+
+The pbs-example.sh and sge-example.sh provide an example of how to use
+myHadoop with PBS and SGE respectively. For more details, please read the
+documentation in the "docs" directory.
+
+
+Pre-requisites
+--------------
+myHadoop needs Apache Hadoop 0.20.2 and a batch scheduler such as PBS.

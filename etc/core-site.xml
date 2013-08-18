@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+<!-- DO NOT EDIT - THESE PROPERTIES ARE SET BY THE CONFIGURE SCRIPTS -->
+<property>
+  <name>hadoop.tmp.dir</name>
+  <value>HADOOP_DATA_DIR</value>
+  <description>A base for other temporary directories.</description>
+</property>
+
+<property>
+  <name>fs.default.name</name>
+  <value>hdfs://MASTER:54310</value>
+  <description>The name of the default file system.  A URI whose
+  scheme and authority determine the FileSystem implementation.  The
+  uri's scheme determines the config property (fs.SCHEME.impl) naming
+  the FileSystem implementation class.  The uri's authority is used to
+  determine the host, port, etc. for a filesystem.</description>
+</property>
+<!-- END OF DO NOT EDIT SECTION -->
+
+<property>
+  <name>io.file.buffer.size</name>
+  <value>131072</value>
+  <description>Size of read/write buffer</description>
+</property>
+
+<property>
+  <name>fs.inmemory.size.mb</name>
+  <value>650</value>
+  <description>Larger amount of memory allocated for the in-memory file-system used to merge map-outputs at the reduces. </description>
+</property>
+
+<property>
+  <name>io.sort.mb</name>
+  <value>650</value>
+  <description>Higher memory-limit while sorting data.</description>
+</property>
+
+</configuration>
