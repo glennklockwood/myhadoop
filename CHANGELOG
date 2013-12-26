@@ -1,8 +1,3 @@
-Latest Updates
---------------
-* No longer shipping with custom Hadoop config templates.  Will use the Hadoop site's config as templates
-* Dropped support for SGE
-
 Version 0.2a
 ------------
 Version 0.2a adds to the 0.1a release as follows:
