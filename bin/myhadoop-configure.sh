@@ -125,10 +125,10 @@ echo $MASTER_NODE > $CONFIG_DIR/masters
 sort -u $NODEFILE | awk '{print $1}' > $CONFIG_DIR/slaves
 
 # update the hdfs and mapred configs
-sed 's/<value>.*:/<value>'"$MASTER_NODE"':/g' $MY_HADOOP_HOME/etc/mapred-site.xml > $CONFIG_DIR/mapred-site.xml
-sed 's/hdfs:\/\/.*:/hdfs:\/\/'"$MASTER_NODE"':/g' $MY_HADOOP_HOME/etc/core-site.xml > $CONFIG_DIR/core-site.xml
+sed 's/<value>.*:/<value>'"$MASTER_NODE"':/g' $HADOOP_HOME/conf/mapred-site.xml > $CONFIG_DIR/mapred-site.xml
+sed 's/hdfs:\/\/.*:/hdfs:\/\/'"$MASTER_NODE"':/g' $HADOOP_HOME/conf/core-site.xml > $CONFIG_DIR/core-site.xml
 sed -i 's:HADOOP_DATA_DIR:'"$HADOOP_DATA_DIR"':g' $CONFIG_DIR/core-site.xml
-cp $MY_HADOOP_HOME/etc/hdfs-site.xml $CONFIG_DIR/
+cp $HADOOP_HOME/conf/hdfs-site.xml $CONFIG_DIR/
 
 # update the HADOOP log directory
 echo "" >> $CONFIG_DIR/hadoop-env.sh
@@ -148,7 +148,7 @@ echo "export HADOOP_LOG_DIR=$HADOOP_LOG_DIR" >> $CONFIG_DIR/hadoop-env.sh
 # create or link HADOOP_{DATA,LOG}_DIR on all slaves
 for ((i=1; i<=$NODES; i++))
 do
-    node=`awk 'NR=='"$i"'{print $1;exit}' $NODEFILE
+    node=`awk 'NR=='"$i"'{print $1;exit}' $NODEFILE`
     echo "Configuring node: $node"
     cmd="rm -rf $HADOOP_LOG_DIR; mkdir -p $HADOOP_LOG_DIR"
     echo $cmd
