@@ -1,70 +1,33 @@
 #!/bin/bash
 
-function print_usage {
-    echo "Usage: -n NODES -h"
-    echo "       -n: Number of nodes requested for the Hadoop installation"
-    echo "       -h: Print help"
-}
-
-# initialize arguments
-NODES=""
-RESOURCE_MGR="pbs"
-
-# parse arguments
-args=`getopt n:h $*`
-if test $? != 0
-then
-    print_usage
+### Make sure HADOOP_CONF_DIR is set
+if [ "z$HADOOP_CONF_DIR " == "z" ]; then
+    echo 'You must set $HADOOP_CONF_DIR so we know what to shut down.' >&2
     exit 1
 fi
-set -- $args
-for i
-do
-    case "$i" in
-        -n) shift;
-	    NODES=$1
-            shift;;
 
-        -h) shift;
-	    print_usage
-	    exit 0
-    esac
+if [ -f $HADOOP_CONF_DIR/myhadoop.conf ]; then
+    source $HADOOP_CONF_DIR/myhadoop.conf || exit 1
+else
+    echo "myhadoop.conf not found in \$HADOOP_CONF_DIR.  Aborting." >&2
+    exit 1
+fi
+
+### Copy the logs from the Hadoop cluster back for post-mortem
+echo "Copying Hadoop logs back to $HADOOP_CONF_DIR/logs..."
+cp -Lvr ${config_subs[HADOOP_LOG_DIR]} $HADOOP_CONF_DIR/logs
+
+### Clean up all the garbage from the Hadoop job
+for node in $(cat $HADOOP_CONF_DIR/slaves $HADOOP_CONF_DIR/masters | sort -u | head -n $NODES)
+do
+    rmdirs=""
+    for key in "${!config_subs[@]}"; do
+        if [[ $key =~ _DIR$ ]]; then
+            rmdirs="${config_subs[$key]} $rmdirs"
+        fi
+    done
+    ssh $node "rm -rvf $rmdirs"
 done
 
-if [ "$NODES" != "" ]; then
-    echo "Number of Hadoop nodes specified by user: $NODES"
-else 
-    echo "Required parameter not set - number of nodes (-n)"
-    print_usage
-    exit 1
-fi
-
-if [ "z$RESOURCE_MGR" == "zpbs" ]; then
-    NODEFILE=$PBS_NODEFILE
-elif [ "z$RESOURCE_MGR" == "zsge" ]; then
-    NODEFILE=$PE_HOSTFILE
-fi
-
-# get the number of nodes from PBS
-if [ -e $NODEFILE ]; then
-    pbsNodes=`awk 'END { print NR }' $NODEFILE`
-    echo "Received $pbsNodes nodes from PBS"
-
-    if [ "$NODES" != "$pbsNodes" ]; then
-        echo "Number of nodes received from PBS not the same as number of nodes requested by user" >&2
-#       exit 1
-    fi
-else 
-    echo "NODEFILE is unavailable"
-    exit 1
-fi
-
-# clean up working directories for N-node Hadoop cluster
-for ((i=1; i<=$NODES; i++))
-do
-    node=`awk 'NR=='"$i"'{print;exit}' $NODEFILE`
-    echo "Clean up node: $node"
-    cmd="rm -rf $HADOOP_DATA_DIR $HADOOP_LOG_DIR"
-    echo $cmd
-    ssh $node $cmd 
-done
+### Jetty also leaves garbage on the master node
+find /tmp -maxdepth 1 -user $USER -name Jetty\* -type d | xargs rm -rvf
