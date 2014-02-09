@@ -1,18 +1,6 @@
-From 98c008e00d636fafd0eb249ddcd419b396c17ee4 Mon Sep 17 00:00:00 2001
-From: Glenn K. Lockwood <glock@sdsc.edu>
-Date: Sat, 8 Feb 2014 14:21:39 -0800
-Subject: [PATCH] config files that play nicely with myhadoop
-
----
- core-site.xml   |   16 ++++++++++++++++
- hdfs-site.xml   |   22 ++++++++++++++++++++++
- mapred-site.xml |   15 +++++++++++++++
- 3 files changed, 53 insertions(+), 0 deletions(-)
-
-diff --git a/core-site.xml b/core-site.xml
-index 970c8fe..c5325ab 100644
---- a/core-site.xml
-+++ b/core-site.xml
+diff -rup a/core-site.xml b/core-site.xml
+--- a/core-site.xml	2013-07-22 15:26:38.000000000 -0700
++++ b/core-site.xml	2014-02-09 11:50:08.682450643 -0800
 @@ -5,4 +5,20 @@
  
  <configuration>
@@ -34,10 +22,9 @@ index 970c8fe..c5325ab 100644
 +</property>
 +
  </configuration>
-diff --git a/hdfs-site.xml b/hdfs-site.xml
-index 970c8fe..6daf154 100644
---- a/hdfs-site.xml
-+++ b/hdfs-site.xml
+diff -rup a/hdfs-site.xml b/hdfs-site.xml
+--- a/hdfs-site.xml	2013-07-22 15:26:38.000000000 -0700
++++ b/hdfs-site.xml	2014-02-09 11:50:08.689450937 -0800
 @@ -5,4 +5,26 @@
  
  <configuration>
@@ -65,10 +52,9 @@ index 970c8fe..6daf154 100644
 +  </property>
 +
  </configuration>
-diff --git a/mapred-site.xml b/mapred-site.xml
-index 970c8fe..9342106 100644
---- a/mapred-site.xml
-+++ b/mapred-site.xml
+diff -rup a/mapred-site.xml b/mapred-site.xml
+--- a/mapred-site.xml	2013-07-22 15:26:38.000000000 -0700
++++ b/mapred-site.xml	2014-02-09 11:50:08.695451185 -0800
 @@ -5,4 +5,19 @@
  
  <configuration>
@@ -89,6 +75,4 @@ index 970c8fe..9342106 100644
 +</property>
 +
  </configuration>
--- 
-1.7.1
-
+Only in a: myhadoop-1.2.1.patch
