@@ -1,4 +1,10 @@
 #!/bin/bash
+################################################################################
+# myhadoop-cleanup.sh - clean up all of the directories created by running a
+#   Hadoop cluster via myHadoop.
+#
+#   Glenn K. Lockwood, San Diego Supercomputer Center            February 2014
+################################################################################
 
 ### Make sure HADOOP_CONF_DIR is set
 if [ "z$HADOOP_CONF_DIR " == "z" ]; then

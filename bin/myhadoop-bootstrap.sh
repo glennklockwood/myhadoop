@@ -1,7 +1,17 @@
 #!/bin/bash
 ################################################################################
 #  myhadoop-bootstrap - call from within a job script to do the entire cluster
-#   setup in a hands-off fashion
+#    setup in a hands-off fashion.
+#
+#  This script still requires manual intervention in editing the following
+#    environment variables:
+#    * MY_HADOOP_IPOIB_SUFFIX
+#    * MY_HADOOP_IPOIB_PREFIX
+#    * MY_HADOOP_LIFETIME
+#    * SCRATCH_DIR
+#
+#  It is considered experimental and is still in the process of being updated
+#  to be as flexible as possible.
 #
 #  Glenn K. Lockwood                                             January 2014
 ################################################################################

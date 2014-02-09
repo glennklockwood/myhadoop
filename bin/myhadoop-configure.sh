@@ -1,4 +1,13 @@
 #!/bin/bash
+################################################################################
+# myhadoop-configure.sh - establish a valid $HADOOP_CONF_DIR with all of the
+#   configurations necessary to start a Hadoop cluster from within a HPC batch
+#   environment.  Additionally format HDFS and leave everything in a state ready
+#   for Hadoop to start up via start-all.sh.
+#
+#   Glenn K. Lockwood, San Diego Supercomputer Center
+#   Sriram Krishnan, San Diego Supercomputer Center              Feburary 2014
+################################################################################
 
 function print_usage {
     echo "Usage: [-n NODES] [-p -d BASE_DIR] -c CONFIG_DIR -s LOCAL_SCRATCH"
@@ -137,7 +146,6 @@ cat $HADOOP_CONF_DIR/slaves
 ### the subsitutions to be applied to the conf/*.xml files below.  If you update
 ### the config_subs hash, be sure to also update myhadoop-cleanup.sh to ensure 
 ### any new directories you define get properly deleted at the end of the job!
-
 cat <<EOF > $HADOOP_CONF_DIR/myhadoop.conf
 NODES=$NODES
 declare -A config_subs
@@ -166,6 +174,7 @@ cat <<EOF >> $HADOOP_CONF_DIR/hadoop-env.sh
 # myHadoop alterations for this job:
 export HADOOP_LOG_DIR=${config_subs[HADOOP_LOG_DIR]}
 export HADOOP_PID_DIR=${config_subs[HADOOP_PID_DIR]}
+export HADOOP_HOME_WARN_SUPPRESS=TRUE
 ### Jetty leaves garbage in /tmp no matter what \$TMPDIR is; this is an extreme 
 ### way of preventing that
 # export _JAVA_OPTIONS="-Djava.io.tmpdir=${config_subs[HADOOP_TMP_DIR]} $_JAVA_OPTIONS"
