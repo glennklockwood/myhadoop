@@ -1,0 +1,94 @@
+From 98c008e00d636fafd0eb249ddcd419b396c17ee4 Mon Sep 17 00:00:00 2001
+From: Glenn K. Lockwood <glock@sdsc.edu>
+Date: Sat, 8 Feb 2014 14:21:39 -0800
+Subject: [PATCH] config files that play nicely with myhadoop
+
+---
+ core-site.xml   |   16 ++++++++++++++++
+ hdfs-site.xml   |   22 ++++++++++++++++++++++
+ mapred-site.xml |   15 +++++++++++++++
+ 3 files changed, 53 insertions(+), 0 deletions(-)
+
+diff --git a/core-site.xml b/core-site.xml
+index 970c8fe..c5325ab 100644
+--- a/core-site.xml
++++ b/core-site.xml
+@@ -5,4 +5,20 @@
+ 
+ <configuration>
+ 
++<property>
++  <name>hadoop.tmp.dir</name>
++  <value>HADOOP_TMP_DIR</value>
++  <description>A base for other temporary directories.</description>
++</property>
++
++<property>
++  <name>fs.default.name</name>
++  <value>hdfs://MASTER_NODE:54310</value>
++  <description>The name of the default file system.  A URI whose
++  scheme and authority determine the FileSystem implementation.  The
++  uri's scheme determines the config property (fs.SCHEME.impl) naming
++  the FileSystem implementation class.  The uri's authority is used to
++  determine the host, port, etc. for a filesystem.</description>
++</property>
++
+ </configuration>
+diff --git a/hdfs-site.xml b/hdfs-site.xml
+index 970c8fe..6daf154 100644
+--- a/hdfs-site.xml
++++ b/hdfs-site.xml
+@@ -5,4 +5,26 @@
+ 
+ <configuration>
+ 
++  <property>
++    <name>dfs.name.dir</name>
++    <value>DFS_NAME_DIR</value>
++    <description>Determines where on the local filesystem the DFS name node
++      should store the name table.  If this is a comma-delimited list
++      of directories then the name table is replicated in all of the
++      directories, for redundancy. </description>
++    <final>true</final>
++  </property>
++
++  <property>
++    <name>dfs.data.dir</name>
++    <value>DFS_DATA_DIR</value>
++    <description>Determines where on the local filesystem an DFS data node
++       should store its blocks.  If this is a comma-delimited
++       list of directories, then data will be stored in all named
++       directories, typically on different devices.
++       Directories that do not exist are ignored.
++    </description>
++    <final>true</final>
++  </property>
++
+ </configuration>
+diff --git a/mapred-site.xml b/mapred-site.xml
+index 970c8fe..9342106 100644
+--- a/mapred-site.xml
++++ b/mapred-site.xml
+@@ -5,4 +5,19 @@
+ 
+ <configuration>
+ 
++<property>
++  <name>mapred.job.tracker</name>
++  <value>MASTER_NODE:54311</value>
++  <description>The host and port that the MapReduce job tracker runs
++  at.  If "local", then jobs are run in-process as a single map
++  and reduce task.
++  </description>
++</property>
++
++<property>
++  <name>mapred.local.dir</name>
++  <value>MAPRED_LOCAL_DIR</value>
++  <final>true</final>
++</property>
++
+ </configuration>
+-- 
+1.7.1
+

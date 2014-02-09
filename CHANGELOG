@@ -1,3 +1,8 @@
+Version 1.0
+-----------
+* Tighter integration of SGE and PBS
+* Tested support for Hadoop version 1.2.1
+
 Version 0.2a
 ------------
 Version 0.2a adds to the 0.1a release as follows:

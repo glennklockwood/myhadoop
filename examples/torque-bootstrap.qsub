@@ -1,0 +1,21 @@
+#!/bin/bash
+################################################################################
+#  torque-bootstrap.qsub - A sample submit script for Torque that illustrates 
+#    how to use the torque-bootstrap.sh script included with myHadoop
+#
+#  Glenn K. Lockwood, San Diego Supercomputer Center             February 2014
+################################################################################
+#PBS -q normal
+#PBS -l nodes=4:ppn=16
+#PBS -l walltime=6:00:00
+
+cd $PBS_O_WORKDIR
+
+### If these aren't already in your environment (e.g., .bashrc), 
+### you must define them
+#export HADOOP_HOME=/opt/hadoop-1.2.1
+#export MY_HADOOP_HOME=/opt/hadoop-1.2.1/contrib/myhadoop
+
+export HADOOP_CONF_DIR=$PBS_O_WORKDIR/hadoop-conf.$PBS_JOBID
+
+myhadoop-bootstrap.sh
