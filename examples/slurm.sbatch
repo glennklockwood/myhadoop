@@ -1,15 +1,13 @@
 #!/bin/bash
 ################################################################################
-#  torque.qsub - A sample submit script for Torque that illustrates how to
+#  slurm.sbatch - A sample submit script for SLURM that illustrates how to
 #    spin up a Hadoop cluster for a map/reduce task using myHadoop
 #
 #  Glenn K. Lockwood, San Diego Supercomputer Center             February 2014
 ################################################################################
-#PBS -q normal
-#PBS -l nodes=4:ppn=16
-#PBS -l walltime=1:00:00
-
-cd $PBS_O_WORKDIR
+#SBATCH -p development
+#SBATCH -n 64
+#SBATCH -t 1:00:00
 
 ### If these aren't already in your environment (e.g., .bashrc), you must define
 ### them.  We assume hadoop and myHadoop were installed in $HOME/hadoop-stack
@@ -17,9 +15,9 @@ export HADOOP_HOME=$HOME/hadoop-stack/hadoop-1.2.1
 export PATH=$HADOOP_HOME/bin:$HOME/hadoop-stack/myhadoop/bin:$PATH:$PATH
 export JAVA_HOME=/usr/java/latest
 
-export HADOOP_CONF_DIR=$PBS_O_WORKDIR/hadoop-conf.$PBS_JOBID
+export HADOOP_CONF_DIR=$PWD/hadoop-conf.$SLURM_JOBID
 
-myhadoop-configure.sh -c $HADOOP_CONF_DIR -s /scratch/$USER/$PBS_JOBID
+myhadoop-configure.sh -c $HADOOP_CONF_DIR -s /tmp/$USER/$SLURM_JOBID
 
 if [ ! -f ./pg2701.txt ]; then
   echo "*** Retrieving some sample input data"
