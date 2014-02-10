@@ -1,0 +1,39 @@
+#!/bin/bash
+################################################################################
+#  sge.qsub - A sample submit script for SGE that illustrates how to
+#    spin up a Hadoop cluster for a map/reduce task using myHadoop
+#
+#  Glenn K. Lockwood, San Diego Supercomputer Center             February 2014
+################################################################################
+#$ -cwd
+#$ -q normal
+#$ -pe 16way 64
+#$ -l h_rt=1:00:00
+
+### If these aren't already in your environment (e.g., .bashrc), you must define
+### them.  We assume hadoop and myHadoop were installed in $HOME/hadoop-stack
+export HADOOP_HOME=$HOME/hadoop-stack/hadoop-1.2.1
+export PATH=$HADOOP_HOME/bin:$HOME/hadoop-stack/myhadoop/bin:$PATH:$PATH
+export JAVA_HOME=/usr/java/latest
+
+export HADOOP_CONF_DIR=$PWD/hadoop-conf.$JOB_ID
+
+myhadoop-configure.sh -c $HADOOP_CONF_DIR -s /scratch/$USER/$JOB_ID
+
+if [ ! -f ./pg2701.txt ]; then
+  echo "*** Retrieving some sample input data"
+  wget 'http://www.gutenberg.org/cache/epub/2701/pg2701.txt'
+fi
+
+$HADOOP_HOME/bin/start-all.sh
+
+$HADOOP_HOME/bin/hadoop dfs -mkdir data
+$HADOOP_HOME/bin/hadoop dfs -put ./pg2701.txt data/
+$HADOOP_HOME/bin/hadoop dfs -ls data
+$HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/hadoop-examples-*.jar wordcount data wordcount-output
+$HADOOP_HOME/bin/hadoop dfs -ls wordcount-output
+$HADOOP_HOME/bin/hadoop dfs -get wordcount-output ./
+
+$HADOOP_HOME/bin/stop-all.sh
+
+myhadoop-cleanup.sh
