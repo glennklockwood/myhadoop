@@ -252,3 +252,60 @@ Strictly speaking, neither of these steps (stop-all.sh and myhadoop-cleanup.sh)
 are necessary since most supercomputers will clean up temporary user files on 
 each node after your job ends, but it doesn't hurt to do these two steps 
 explicitly to save on potential headaches.
+
+## Advanced Features
+
+### Persistent mode
+
+Although the preferred way of using myHadoop and HDFS is using node-local disk
+for HDFS, this has the drawback of the HDFS state not persisting once your
+myHadoop job ends and the node-local scratch space is (presumably) purged by
+the resource manager.
+
+To address this limitation, myHadoop also provides a "persistent" mode whereby
+the namenode and all datanodes are actually stored on some persistent, shared
+filesystem (like Lustre) and linked to each Hadoop node at the same location
+in a node-local filesystem.
+
+To configure a "persistent" myHadoop cluster, add the -p flag to specify a
+location on the shared filesystem to act as the true storage backend for all
+of your datanodes and namenode, e.g.,
+
+    myhadoop-configure.sh -p /path/to/shared/filesystem \
+                          -c /your/new/config/dir \
+                          -s /path/to/node/local/storage
+
+In this case, /path/to/shared/filesystem would be your space on a filesystem
+accessible to all of your Hadoop nodes, /your/new/config/dir is the same
+arbitrary configuration directory for the cluster you want to spin up (this
+does not need to be the same as any previous persistent states), and
+/path/to/node/local/storage remains a path to a filesystem that is NOT shared
+across nodes (e.g., /tmp).
+
+Persistent mode then creates directories under /path/to/shared/filesystem that 
+stores the datanode and HDFS data for each datanode.  In addition, it creates
+a /path/to/shared/filesystem/namenode_data directory which contains the namenode
+state (e.g., fsimage).  It then creates symlinks in /path/to/node/local/storage
+pointing to /path/to/shared/filesystem on each datanode to point to this shared
+filesystem.
+
+You can then safely run your map/reduce jobs, stop-all.sh to shut down the
+cluster, and even myhadoop-cleanup.sh to wipe out your compute nodes.  At a 
+later time, you can request a new set of nodes from your supercomputer's batch
+scheduler, run the same myhadoop-configure.sh command with the -p option
+pointing to the same /path/to/shared/filesystem, and myHadoop will detect an
+existing persistent HDFS state and adjust the resulting Hadoop cluster 
+configurations accordingly.  You can use this mechanism to store data on HDFS
+even when you have no jobs running in the batch system.
+
+*IMPORTANT NOTE*: Use of persistent mode is not recommended, as Hadoop's
+performance and resiliency arises from the fact that HDFS resides on physically
+discrete storage devices.  By pointing all of your datanodes' HDFS blocks at
+the same persistent storage device (a SAN, NFS-mounted storage, etc), you lose 
+the data parallelism and resulting perfomance that makes Hadoop useful.  You 
+are, in effect, shooting yourself in the foot by doing this.  The only potential
+exception to this is if you use a parallel clustered filesystem (like Lustre)
+as the persistent storage device; the parallelism underneath that filesystem
+may allow you to recover some of the performance loss because it will store
+your HDFS blocks on different object storage targets.  However, other 
+bottlenecks and limitations also enter the picture.

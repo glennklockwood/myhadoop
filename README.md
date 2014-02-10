@@ -1,5 +1,4 @@
-myhadoop
-========
+# myHadoop
 
 This represents the logical continuation of the myhadoop project by Sriram 
 Krishnan (http://sourceforge.net/projects/myhadoop/).
@@ -9,8 +8,7 @@ high-performance compute clusters and supercomputers.  It allows users to
 provision and deploy Hadoop clusters within the batch scheduling environment of
 such systems with minimal expertise required.
 
-Quick Install
--------------
+## Quick Install
 
 Assuming you unpacked myHadoop in /usr/local/myhadoop and your Hadoop binary
 distribution is located in /usr/local/hadoop-1.2.1:
@@ -21,8 +19,7 @@ distribution is located in /usr/local/hadoop-1.2.1:
 That's it.  See USERGUIDE.md for a more detailed installation guide and a brief
 introduction to using myHadoop.
 
-About myHadoop
---------------
+## About myHadoop
 This framework comes with three principal runtimes:
 
 * bin/myhadoop-configure.sh - creates a Hadoop configuration set based on the
@@ -35,8 +32,8 @@ This framework comes with three principal runtimes:
   spinup of a Hadoop cluster and instructions for the user on how to connect 
   to his or her personal cluster.
 
-myhadoop-configure.sh
----------------------
+### myhadoop-configure.sh
+
 This script takes a series of template configuration XML files, applies the 
 necessary patches based on the job runtime environment provided by the batch
 scheduler, and (optionally) formats HDFS.  The general syntax is
@@ -59,8 +56,8 @@ defined in your environment.  myhadoop-configure.sh will look in
 $HADOOP_HOME/conf for the configuration templates it will use for your 
 personal Hadoop cluster.
 
-myhadoop-cleanup.sh
--------------------
+### myhadoop-cleanup.sh
+
 This is a courtesy script that simply deletes all of the data created by a
 Hadoop cluster on all of the cluster's nodes.  A proper batch system should do
 this automatically.
@@ -68,8 +65,8 @@ this automatically.
 To run myhadoop-cleanup.sh, you must have HADOOP_HOME and HADOOP_CONF_DIR
 defined in your environment.
 
-myhadoop-bootstrap.sh
----------------------
+### myhadoop-bootstrap.sh
+
 This is another courtesy script that wraps myhadoop-configure.sh to simplify
 the process of creating Hadoop clusters for users.  When run from within a
 batch environment (e.g., a batch job or an interactive job), it will gather
