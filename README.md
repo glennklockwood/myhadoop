@@ -9,17 +9,31 @@ high-performance compute clusters and supercomputers.  It allows users to
 provision and deploy Hadoop clusters within the batch scheduling environment of
 such systems with minimal expertise required.
 
+Quick Install
+-------------
+
+Assuming you unpacked myHadoop in /usr/local/myhadoop and your Hadoop binary
+distribution is located in /usr/local/hadoop-1.2.1:
+
+    cd /usr/local/hadoop-1.2.1/conf
+    patch < /usr/local/myhadoop/myhadoop-1.2.1.patch
+
+That's it.  See USERGUIDE.md for a more detailed installation guide and a brief
+introduction to using myHadoop.
+
+About myHadoop
+--------------
 This framework comes with three principal runtimes:
 
-* myhadoop-configure.sh - creates a Hadoop configuration set based on the
+* bin/myhadoop-configure.sh - creates a Hadoop configuration set based on the
   information presented by a system's batch scheduler.  At present, myhadoop
-  interfaces with both Torque and Sun Grid Engine.
-* myhadoop-cleanup.sh - cleans up after the Hadoop cluster has been torn
+  interfaces with Torque, SLURM, and Sun Grid Engine.
+* bin/myhadoop-cleanup.sh - cleans up after the Hadoop cluster has been torn
   down.
-* myhadoop-bootstrap.sh - When run from either within a job submission script
-  or an interactive job, it provides a one-command configuration and spinup of
-  a Hadoop cluster and instructions for the user on how to connect to his or
-  her personal cluster.
+* bin/myhadoop-bootstrap.sh - When run from either within a job submission 
+  script or an interactive job, it provides a one-command configuration and 
+  spinup of a Hadoop cluster and instructions for the user on how to connect 
+  to his or her personal cluster.
 
 myhadoop-configure.sh
 ---------------------
@@ -40,9 +54,10 @@ where
 The examples/ directory contains torque.qsub which illustrates how this
 would look in practice.
 
-Before calling myhadoop-configure.sh, you MUST have HADOOP_HOME defined in your
-environment.  myhadoop-configure.sh will look in $HADOOP_HOME/conf for the
-configuration templates it will use for your personal Hadoop cluster.
+Before calling myhadoop-configure.sh, you MUST have HADOOP_HOME and JAVA_HOME
+defined in your environment.  myhadoop-configure.sh will look in 
+$HADOOP_HOME/conf for the configuration templates it will use for your 
+personal Hadoop cluster.
 
 myhadoop-cleanup.sh
 -------------------
@@ -71,9 +86,9 @@ This script also contains the modifications necessary to use Hadoop with an
 IP over InfiniBand interface.
 
 The examples/ directory contains torque-bootstrap.qsub that illustrates how
-a user may use myhadoop-boostrap.sh in a Torque environment.  He or she 
-simply has to submit this script and wait for "setenv.sourceme" to appear in
-his or her directory.  Once it appears, he or she can "cat" the file and 
+a user may use myhadoop-boostrap.sh in all supported batch environment.  He or 
+she simply has to submit this script and wait for "setenv.sourceme" to appear 
+in his or her directory.  Once it appears, he or she can "cat" the file and 
 follow the instructions contained within to get to an environment where he
 or she can begin interacting with his or her cluster using the "hadoop"
 command.
