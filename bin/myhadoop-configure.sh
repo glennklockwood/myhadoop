@@ -10,13 +10,13 @@
 ################################################################################
 
 function print_usage {
-    echo "Usage: [-n NODES] [-p -d BASE_DIR] -c CONFIG_DIR -s LOCAL_SCRATCH"
+    echo "Usage: [-n NODES] [-p BASE_DIR] -c CONFIG_DIR -s LOCAL_SCRATCH"
     echo "       -n: Number of nodes requested for the Hadoop installation"
     echo "       -p: Whether the Hadoop installation should be persistent"
     echo "           If so, data directories will have to be linked to a"
-    echo "           directory that is not local to enable persistence"
-    echo "       -d: Base directory to persist HDFS state, to be used if"
-    echo "           -p is set"
+    echo "           directory that is not local to enable persistence."
+    echo "           BASE_DIR is the location (on a shared filesystem) to"
+    echo "           store the namenode and datanodes' persistent states"
     echo "       -c: The directory to become your new HADOOP_CONF_DIR"
     echo "       -h: Print help"
 }
@@ -32,7 +32,6 @@ function print_nodelist {
 }
 
 # initialize arguments
-PERSIST="false"
 PERSIST_BASE_DIR=""
 HADOOP_CONF_DIR=""
 SCRATCH_DIR=""
@@ -67,7 +66,7 @@ if [ "z$HADOOP_HOME" == "z" ]; then
 fi
 
 ### Parse arguments
-args=`getopt n:pd:c:hs: $*`
+args=`getopt n:p:c:hs: $*`
 if test $? != 0
 then
     print_usage
@@ -81,7 +80,7 @@ do
             NODES=$1
             shift;;
 
-        -d) shift;
+        -p) shift;
             PERSIST_BASE_DIR=$1
             shift;;
 
@@ -92,10 +91,6 @@ do
         -s) shift;
             SCRATCH_DIR=$1
             shift;;
-
-        -p) shift;
-            PERSIST="true"
-            ;;
 
         -h) shift;
             print_usage
@@ -123,15 +118,8 @@ else
 fi
 
 ### Support for persistent HDFS on a shared filesystem
-if [ "$PERSIST" == "true" ]; then
-    echo "Enabling persistent HDFS state..."
-    if [ "$PERSIST_BASE_DIR" = "" ]; then
-        echo "Base directory (-d) not set for persisting HDFS state.  Aborting." >&2
-        print_usage
-        exit 1
-    else
-        echo "Using directory $PERSIST_BASE_DIR for persisting HDFS state..."
-    fi
+if [ "z$PERSIST_BASE_DIR" != "z" ]; then
+    echo "Using directory $PERSIST_BASE_DIR for persisting HDFS state..."
 fi
 
    
@@ -201,13 +189,27 @@ export JAVA_HOME=$JAVA_HOME
 # Other job-specific environment variables follow:
 EOF
 
-### Link HDFS data directories if persistent mode
-if [ "$PERSIST" = "true" ]; then
+if [ "z$PERSIST_BASE_DIR" != "z" ]; then
+    ### Link HDFS data directories if persistent mode
+    i=0
     for node in $(cat $HADOOP_CONF_DIR/slaves $HADOOP_CONF_DIR/masters | sort -u | head -n $NODES)
     do
-        ssh $node "ln -s $PERSIST_BASE_DIR/$i ${config_subs[DFS_DATA_DIR]}"
+        mkdir -p $PERSIST_BASE_DIR/$i
+        echo "Linking $PERSIST_BASE_DIR/$i to ${config_subs[DFS_DATA_DIR]} on $node"
+        ssh $node "mkdir -p $(dirname ${config_subs[DFS_DATA_DIR]}); ln -s $PERSIST_BASE_DIR/$i ${config_subs[DFS_DATA_DIR]}"
+        let i++
     done
-### Otherwise, format HDFS
-else
-    HADOOP_CONF_DIR=$HADOOP_CONF_DIR $HADOOP_HOME/bin/hadoop namenode -format
+
+    ### Also link namenode data directory so we don't lose metadata on shutdown
+    namedir=$(basename ${config_subs[DFS_NAME_DIR]})
+    mkdir -p $PERSIST_BASE_DIR/$namedir
+    for node in $(cat $HADOOP_CONF_DIR/masters | sort -u )
+    do
+        ssh $node "mkdir -p $(dirname ${config_subs[DFS_NAME_DIR]}); ln -s $PERSIST_BASE_DIR/$namedir ${config_subs[DFS_NAME_DIR]}"
+    done
+fi
+
+### Format HDFS if it does not already exist from persistent mode
+if [ ! -e ${config_subs[DFS_NAME_DIR]}/current ]; then
+  HADOOP_CONF_DIR=$HADOOP_CONF_DIR $HADOOP_HOME/bin/hadoop namenode -format -nonInteractive -force
 fi

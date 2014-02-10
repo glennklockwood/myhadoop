@@ -27,12 +27,19 @@ cp -Lvr ${config_subs[HADOOP_LOG_DIR]} $HADOOP_CONF_DIR/logs
 for node in $(cat $HADOOP_CONF_DIR/slaves $HADOOP_CONF_DIR/masters | sort -u | head -n $NODES)
 do
     rmdirs=""
+    rmlinks=""
     for key in "${!config_subs[@]}"; do
         if [[ $key =~ _DIR$ ]]; then
-            rmdirs="${config_subs[$key]} $rmdirs"
+            ### If a dir is a symlink, that means it's pointing to a persistent
+            ### state that should NOT be deleted.
+            if [ -h ${config_subs[$key]} ]; then
+                rmlinks="${config_subs[$key]} $rmlinks"
+            else
+                rmdirs="${config_subs[$key]} $rmdirs"
+            fi
         fi
     done
-    ssh $node "rm -rvf $rmdirs"
+    ssh $node "rm -rvf $rmdirs; rm -vf $rmlinks"
 done
 
 ### Jetty also leaves garbage on the master node
