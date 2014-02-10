@@ -21,6 +21,16 @@ function print_usage {
     echo "       -h: Print help"
 }
 
+function print_nodelist {
+    if [ "z$RESOURCE_MGR" == "zpbs" ]; then
+        cat $PBS_NODEFILE
+    elif [ "z$RESOURCE_MGR" == "zsge" ]; then
+        cat $PE_NODEFILE
+    elif [ "z$RESOURCE_MGR" == "zslurm" ]; then
+	scontrol show hostname $SLURM_NODELIST
+    fi
+}
+
 # initialize arguments
 PERSIST="false"
 PERSIST_BASE_DIR=""
@@ -28,10 +38,12 @@ HADOOP_CONF_DIR=""
 SCRATCH_DIR=""
 
 ### Detect our resource manager and populate necessary environment variables
-if [ "z$PBS_NODEFILE" != "z" ]; then
+if [ "z$PBS_JOBID" != "z" ]; then
     RESOURCE_MGR="pbs"
 elif [ "z$PE_NODEFILE" != "z" ]; then
     RESOURCE_MGR="sge"
+elif [ "z$SLURM_JOBID" != "z" ]; then
+    RESOURCE_MGR="slurm"
 else
     echo "No resource manager detected.  Aborting." >&2
     exit 1
@@ -39,12 +51,13 @@ fi
 
 if [ "z$RESOURCE_MGR" == "zpbs" ]; then
     NODES=$PBS_NUM_NODES
-    NODEFILE=$PBS_NODEFILE
     JOBID=$PBS_JOBID
 elif [ "z$RESOURCE_MGR" == "zsge" ]; then
     NODES=$NSLOTS
-    NODEFILE=$PE_NODEFILE
     JOBID=$JOB_ID
+elif [ "z$RESOURCE_MGR" == "zslurm" ]; then
+    NODES=$SLURM_NNODES
+    JOBID=$SLURM_JOBID
 fi
 
 ### Make sure HADOOP_HOME is set
@@ -96,6 +109,11 @@ if [ "z$SCRATCH_DIR" == "z" ]; then
     exit 1
 fi
 
+if [ "z$JAVA_HOME" == "z" ]; then
+    echo "JAVA_HOME is not defined.  Aborting." >&2
+    exit 1
+fi
+
 if [ "z$HADOOP_CONF_DIR" == "z" ]; then
     echo "Location of configuration directory not specified.  Aborting." >&2
     print_usage
@@ -133,12 +151,12 @@ mkdir -p $HADOOP_CONF_DIR
 cp $HADOOP_HOME/conf/* $HADOOP_CONF_DIR
 
 ### Pick the master node as the first node in the nodefile
-MASTER_NODE=$(/usr/bin/head -n1 $NODEFILE)
+MASTER_NODE=$(print_nodelist | /usr/bin/head -n1)
 echo "Designating $MASTER_NODE as master node (namenode, secondary namenode, and jobtracker)"
 echo $MASTER_NODE > $HADOOP_CONF_DIR/masters
 
 ### Make every node in the nodefile a slave
-awk '{print $1}' $NODEFILE | sort -u | head -n $NODES > $HADOOP_CONF_DIR/slaves
+print_nodelist | awk '{print $1}' | sort -u | head -n $NODES > $HADOOP_CONF_DIR/slaves
 echo "The following nodes will be slaves (datanode, tasktracer):"
 cat $HADOOP_CONF_DIR/slaves
 
@@ -175,6 +193,7 @@ cat <<EOF >> $HADOOP_CONF_DIR/hadoop-env.sh
 export HADOOP_LOG_DIR=${config_subs[HADOOP_LOG_DIR]}
 export HADOOP_PID_DIR=${config_subs[HADOOP_PID_DIR]}
 export HADOOP_HOME_WARN_SUPPRESS=TRUE
+export JAVA_HOME=$JAVA_HOME
 ### Jetty leaves garbage in /tmp no matter what \$TMPDIR is; this is an extreme 
 ### way of preventing that
 # export _JAVA_OPTIONS="-Djava.io.tmpdir=${config_subs[HADOOP_TMP_DIR]} $_JAVA_OPTIONS"

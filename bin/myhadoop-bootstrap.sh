@@ -36,10 +36,12 @@ if [ "z$HADOOP_HOME" == "z" -o "z$MY_HADOOP_HOME" == "z" ]; then
 fi
 
 ### Detect our resource manager and populate necessary environment variables
-if [ "z$PBS_NODEFILE" != "z" ]; then
+if [ "z$PBS_JOBID" != "z" ]; then
     RESOURCE_MGR="pbs"
 elif [ "z$PE_NODEFILE" != "z" ]; then
     RESOURCE_MGR="sge"
+elif [ "z$SLURM_JOBID" != "z" ]; then
+    RESOURCE_MGR="slurm"
 fi
 
 ### Extract the necessary environment variables
@@ -52,6 +54,11 @@ elif [ "z$RESOURCE_MGR" == "zsge" ]; then
     MH_WORKDIR=$SGE_O_WORKDIR
     MH_JOBID=$JOB_ID
     MH_NODEFILE=$PE_NODEFILE
+elif [ "z$RESOURCE_MGR" == "zslurm" ]; then
+    MH_WORKDIR=$SLURM_SUBMIT_DIR
+    MH_JOBID=$SLURM_JOBID
+    MH_NODEFILE=$(mktemp)
+    scontrol show hostname $SLURM_NODELIST > $MH_NODEFILE
 else
     # non-cluster environment - use at risk!
     MH_WORKDIR=$PWD
