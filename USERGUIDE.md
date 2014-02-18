@@ -328,21 +328,14 @@ the necessary transformation would be
 The myhadoop-configure.sh command has the following command-line options that
 can also be set via the environment variables listed below:
 
-        | Environment        | 
- Switch | Variable           | Option
---------------------------------------------------------------------------------
+ Switch |Environment Variable| Option
+--------|--------------------|--------------------------------------------------
 -n      | NODES              | number of nodes to use for Hadoop cluster
---------------------------------------------------------------------------------
 -p      | MH_PERSIST_DIR     | location of persistent HDFS data
---------------------------------------------------------------------------------
 -c      | HADOOP_CONF_DIR    | location to use when building new Hadoop config directory
---------------------------------------------------------------------------------
 -s      | MH_SCRATCH_DIR     | location of node-local storage for HDFS data
---------------------------------------------------------------------------------
 -h      | HADOOP_HOME        | location of hadoop installation containing myHadoop templates in $HADOOP_HOME/conf
---------------------------------------------------------------------------------
 -i      | MH_IPOIB_TRANSFORM | regex (passed to sed -e) to transform hostnames from resource manager to IP over InfiniBand hosts
---------------------------------------------------------------------------------
 
 The order of precedence is
 
