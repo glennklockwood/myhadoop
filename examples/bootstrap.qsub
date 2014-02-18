@@ -1,0 +1,33 @@
+#!/bin/bash
+################################################################################
+#  bootstrap.qsub - A sample submit script that illustrates how simple it is
+#    to use myhadoop-bootstrap.sh to both configure and launch a Hadoop cluster.
+#
+#  Glenn K. Lockwood, San Diego Supercomputer Center             February 2014
+################################################################################
+#
+# Torque parameters
+#PBS -q normal
+#PBS -l nodes=4:ppn=16:native
+#PBS -l walltime=6:00:00
+#
+# Slurm parameters
+#SBATCH -p development
+#SBATCH -n 64
+#SBATCH -t 1:00:00
+#
+# SGE parameters
+#$ -cwd
+#$ -q normal
+#$ -pe 16way 64
+#$ -l h_rt=1:00:00
+
+export JAVA_HOME=/usr/java/latest
+
+### You can either define HADOOP_HOME and MH_SCRATCH_DIR here or in your 
+### myhadoop/etc/myhadoop.conf file
+export HADOOP_HOME=/opt/hadoop
+export MH_SCRATCH_DIR=/scratch/$USER
+
+#  Run a Hadoop cluster for an hour (3600 seconds)
+myhadoop-bootstrap.sh 3600

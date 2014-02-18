@@ -309,3 +309,66 @@ as the persistent storage device; the parallelism underneath that filesystem
 may allow you to recover some of the performance loss because it will store
 your HDFS blocks on different object storage targets.  However, other 
 bottlenecks and limitations also enter the picture.
+
+### IP over InfiniBand
+
+myHadoop provides a simple facility to run all HDFS and mapreduce traffic over
+IPoIB (IP over InfiniBand) interfaces.  By specifying the -i option followed by
+a regular expression transformation (which is passed to sed), the list of 
+hostnames provided by the resource manager can be modified to be IPoIB
+hostnames.
+
+For example, if the IPoIB interface for "node-0-1" is "node-0-1.ibnet", then
+the necessary transformation would be
+
+    -i 's/$/.ibnet/'
+
+### Environment Variables
+
+The myhadoop-configure.sh command has the following command-line options that
+can also be set via the environment variables listed below:
+
+        | Environment        | 
+ Switch | Variable           | Option
+--------------------------------------------------------------------------------
+-n      | NODES              | number of nodes to use for Hadoop cluster
+--------------------------------------------------------------------------------
+-p      | MH_PERSIST_DIR     | location of persistent HDFS data
+--------------------------------------------------------------------------------
+-c      | HADOOP_CONF_DIR    | location to use when building new Hadoop config directory
+--------------------------------------------------------------------------------
+-s      | MH_SCRATCH_DIR     | location of node-local storage for HDFS data
+--------------------------------------------------------------------------------
+-h      | HADOOP_HOME        | location of hadoop installation containing myHadoop templates in $HADOOP_HOME/conf
+--------------------------------------------------------------------------------
+-i      | MH_IPOIB_TRANSFORM | regex (passed to sed -e) to transform hostnames from resource manager to IP over InfiniBand hosts
+--------------------------------------------------------------------------------
+
+The order of precedence is
+
+1. etc/myhadoop.conf is loaded
+2. Environment variables are loaded
+3. Command line switches are evaluated
+
+### etc/myhadoop.conf
+
+myHadoop allows systems administators to set up default configurations that 
+make the most sense for an entire system via the myhadoop.conf file located in
+the "../etc/myhadoop.conf" relative to the myhhadoop-configure.sh script.
+This file contains simple bash lines which are evaluated before 
+myhadoop-configure.sh builds its configurations.  As mentioned above, the
+variables set in this file are the defaults which can be overridden by the
+user environment OR command-line switches when the myhadoop-configure.sh command
+is called.
+
+All lines in myhadoop.conf are actually evaluated as-is, so significant 
+system-specific modification to the myhadoop-configure.sh script can be made
+via myhadoop-conf.  Systems administators may wish to define the following
+variables:
+
+1. MH_SCRATCH_DIR - sets the location of the node-local storage filesystem.
+   Can contain other variables, e.g., MH_SCRATCH_DIR=/scratch/$USER
+2. HADOOP_HOME - sets the location of the Hadoop installation.  This will
+   propogate through the entire Hadoop configuration process
+3. MH_IPOIB_TRANSFORM - sets the transformation to ensure that Hadoop
+   runs over the IP over InfiniBand interfaces.

@@ -17,7 +17,7 @@ export JAVA_HOME=/usr/java/latest
 
 export HADOOP_CONF_DIR=$PWD/hadoop-conf.$SLURM_JOBID
 
-myhadoop-configure.sh -c $HADOOP_CONF_DIR -s /tmp/$USER/$SLURM_JOBID
+myhadoop-configure.sh -s /tmp/$USER/$SLURM_JOBID
 
 if [ ! -f ./pg2701.txt ]; then
   echo "*** Retrieving some sample input data"

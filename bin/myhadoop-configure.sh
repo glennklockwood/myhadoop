@@ -9,32 +9,78 @@
 #   Sriram Krishnan, San Diego Supercomputer Center              Feburary 2014
 ################################################################################
 
-function print_usage {
-    echo "Usage: [-n NODES] [-p BASE_DIR] -c CONFIG_DIR -s LOCAL_SCRATCH"
-    echo "       -n: Number of nodes requested for the Hadoop installation"
-    echo "       -p: Whether the Hadoop installation should be persistent"
-    echo "           If so, data directories will have to be linked to a"
-    echo "           directory that is not local to enable persistence."
-    echo "           BASE_DIR is the location (on a shared filesystem) to"
-    echo "           store the namenode and datanodes' persistent states"
-    echo "       -c: The directory to become your new HADOOP_CONF_DIR"
-    echo "       -h: Print help"
+MH_HOME="$(dirname $(readlink -f $0))/.."
+
+function mh_print {
+    echo "myHadoop: $@"
 }
+
+function print_usage {
+    echo "Usage: $(basename $0) [options]" >&2
+    cat <<EOF >&2
+    -n <num> 
+        specify number of nodes to use.  (default: all nodes from resource 
+        manager)
+
+    -p <dir> 
+        use persistent HDFS and store namenode and datanode state on the shared 
+        filesystem given by <dir> (default: n/a)
+
+    -c <dir>
+        build the resulting Hadoop config directory in <dr> (default: from 
+        user environment's HADOOP_CONF_DIR or myhadoop.conf)
+
+    -s <dir>
+        location of node-local scratch directory where datanode and tasktracker
+        will be stored.  (default: user environment's MH_SCRATCH_DIR or 
+        myhadoop.conf)
+
+    -h <dir>
+        location of Hadoop installation containing the myHadoop configuration
+        templates in <dir>/conf and the 'hadoop' executable in <dir>/bin/hadoop
+        (default: user environment's HADOOP_HOME or myhadoop.conf)
+
+    -i <regular expression>
+        transformation (passed to sed -e) to turn each hostname provided by the
+        resource manager into an IP over InfiniBand host.  (default: "")
+
+    -?
+        show this help message
+EOF
+
+}
+if [ "z$1" == "z-?" ]; then
+  print_usage
+  exit 0
+fi
 
 function print_nodelist {
     if [ "z$RESOURCE_MGR" == "zpbs" ]; then
-        cat $PBS_NODEFILE
+        cat $PBS_NODEFILE | sed -e "$MH_IPOIB_TRANSFORM"
     elif [ "z$RESOURCE_MGR" == "zsge" ]; then
-        cat $PE_NODEFILE
+        cat $PE_NODEFILE | sed -e "$MH_IPOIB_TRANSFORM"
     elif [ "z$RESOURCE_MGR" == "zslurm" ]; then
-	scontrol show hostname $SLURM_NODELIST
+        scontrol show hostname $SLURM_NODELIST | sed -e "$MH_IPOIB_TRANSFORM"
     fi
 }
 
-# initialize arguments
-PERSIST_BASE_DIR=""
-HADOOP_CONF_DIR=""
-SCRATCH_DIR=""
+### Read in some system-wide configurations (if applicable) but do not override
+### the user's environment
+if [ -e "$MH_HOME/etc/myhadoop.conf" ]; then
+  while read line; do
+    rex='^[^# ]*='
+    if [[ $line =~ $rex ]]; then
+      variable=$(cut -d = -f1 <<< $line)
+      value=$(cut -d = -f 2- <<< $line)
+      if [ "z${!variable}" == "z" ]; then
+        eval "$variable=$value"
+        mh_print "Setting $variable=$value from myhadoop.conf"
+      else
+        mh_print "Keeping $variable=${!variable} from user environment"
+      fi
+    fi
+  done < $MH_HOME/etc/myhadoop.conf
+fi
 
 ### Detect our resource manager and populate necessary environment variables
 if [ "z$PBS_JOBID" != "z" ]; then
@@ -45,28 +91,26 @@ elif [ "z$SLURM_JOBID" != "z" ]; then
     RESOURCE_MGR="slurm"
 else
     echo "No resource manager detected.  Aborting." >&2
+    print_usage
     exit 1
 fi
 
 if [ "z$RESOURCE_MGR" == "zpbs" ]; then
     NODES=$PBS_NUM_NODES
+    NUMPROCS=$PBS_NP
     JOBID=$PBS_JOBID
 elif [ "z$RESOURCE_MGR" == "zsge" ]; then
-    NODES=$NSLOTS
+    NODES=$NHOSTS
+    NUMPROCS=$NSLOTS
     JOBID=$JOB_ID
 elif [ "z$RESOURCE_MGR" == "zslurm" ]; then
     NODES=$SLURM_NNODES
+    NUMPROCS=$SLURM_NPROCS
     JOBID=$SLURM_JOBID
 fi
 
-### Make sure HADOOP_HOME is set
-if [ "z$HADOOP_HOME" == "z" ]; then
-    echo 'You must set $HADOOP_HOME before configuring a new cluster.' >&2
-    exit 1
-fi
-
 ### Parse arguments
-args=`getopt n:p:c:hs: $*`
+args=`getopt n:p:c:s:h:i:? $*`
 if test $? != 0
 then
     print_usage
@@ -81,7 +125,7 @@ do
             shift;;
 
         -p) shift;
-            PERSIST_BASE_DIR=$1
+            MH_PERSIST_DIR=$1
             shift;;
 
         -c) shift;
@@ -89,37 +133,53 @@ do
             shift;;
 
         -s) shift;
-            SCRATCH_DIR=$1
+            MH_SCRATCH_DIR=$1
             shift;;
 
         -h) shift;
-            print_usage
-            exit 0
+            HADOOP_HOME=$1
+            shift;;
+
+        -i) shift;
+            MH_IPOIB_TRANSFORM=$1
+            shift;;
     esac
 done
 
-if [ "z$SCRATCH_DIR" == "z" ]; then
-    echo "You must specify the local disk filesystem location with -d.  Aborting." >&2
+if [ "z$HADOOP_HOME" == "z" ]; then
+    if [ "z$HADOOP_PREFIX" == "z" ]; then
+        echo 'You must set $HADOOP_HOME before configuring a new cluster.' >&2
+        exit 1
+    else
+        HADOOP_HOME=$HADOOP_PREFIX
+    fi
+fi
+mh_print "Using HADOOP_HOME=$HADOOP_HOME"
+
+if [ "z$MH_SCRATCH_DIR" == "z" ]; then
+    echo "You must specify the local disk filesystem location with -s.  Aborting." >&2
     print_usage
     exit 1
 fi
+mh_print "Using MH_SCRATCH_DIR=$MH_SCRATCH_DIR"
 
 if [ "z$JAVA_HOME" == "z" ]; then
     echo "JAVA_HOME is not defined.  Aborting." >&2
+    print_usage
     exit 1
 fi
+mh_print "Using JAVA_HOME=$JAVA_HOME"
 
 if [ "z$HADOOP_CONF_DIR" == "z" ]; then
     echo "Location of configuration directory not specified.  Aborting." >&2
     print_usage
     exit 1
-else 
-    echo "Generating Hadoop configuration in directory in $HADOOP_CONF_DIR..."
 fi
+mh_print "Generating Hadoop configuration in directory in $HADOOP_CONF_DIR..."
 
 ### Support for persistent HDFS on a shared filesystem
-if [ "z$PERSIST_BASE_DIR" != "z" ]; then
-    echo "Using directory $PERSIST_BASE_DIR for persisting HDFS state..."
+if [ "z$MH_PERSIST_DIR" != "z" ]; then
+    mh_print "Using directory $MH_PERSIST_DIR for persisting HDFS state..."
 fi
 
    
@@ -130,7 +190,7 @@ if [ -d $HADOOP_CONF_DIR ]; then
     do
         let i++
     done
-    echo "Backing up old config dir to $HADOOP_CONF_DIR.$i..."
+    mh_print "Backing up old config dir to $HADOOP_CONF_DIR.$i..."
     mv -v $HADOOP_CONF_DIR $HADOOP_CONF_DIR.$i
 fi
 mkdir -p $HADOOP_CONF_DIR
@@ -140,12 +200,12 @@ cp $HADOOP_HOME/conf/* $HADOOP_CONF_DIR
 
 ### Pick the master node as the first node in the nodefile
 MASTER_NODE=$(print_nodelist | /usr/bin/head -n1)
-echo "Designating $MASTER_NODE as master node (namenode, secondary namenode, and jobtracker)"
+mh_print "Designating $MASTER_NODE as master node (namenode, secondary namenode, and jobtracker)"
 echo $MASTER_NODE > $HADOOP_CONF_DIR/masters
 
 ### Make every node in the nodefile a slave
 print_nodelist | awk '{print $1}' | sort -u | head -n $NODES > $HADOOP_CONF_DIR/slaves
-echo "The following nodes will be slaves (datanode, tasktracer):"
+mh_print "The following nodes will be slaves (datanode, tasktracer):"
 cat $HADOOP_CONF_DIR/slaves
 
 ### Set the Hadoop configuration files to be specific for our job.  Populate
@@ -156,12 +216,12 @@ cat <<EOF > $HADOOP_CONF_DIR/myhadoop.conf
 NODES=$NODES
 declare -A config_subs
 config_subs[MASTER_NODE]="$MASTER_NODE"
-config_subs[MAPRED_LOCAL_DIR]="$SCRATCH_DIR/mapred_scratch"
-config_subs[HADOOP_TMP_DIR]="$SCRATCH_DIR/tmp"
-config_subs[DFS_NAME_DIR]="$SCRATCH_DIR/namenode_data"
-config_subs[DFS_DATA_DIR]="$SCRATCH_DIR/hdfs_data"
-config_subs[HADOOP_LOG_DIR]="$SCRATCH_DIR/logs"
-config_subs[HADOOP_PID_DIR]="$SCRATCH_DIR/pids"
+config_subs[MAPRED_LOCAL_DIR]="$MH_SCRATCH_DIR/mapred_scratch"
+config_subs[HADOOP_TMP_DIR]="$MH_SCRATCH_DIR/tmp"
+config_subs[DFS_NAME_DIR]="$MH_SCRATCH_DIR/namenode_data"
+config_subs[DFS_DATA_DIR]="$MH_SCRATCH_DIR/hdfs_data"
+config_subs[HADOOP_LOG_DIR]="$MH_SCRATCH_DIR/logs"
+config_subs[HADOOP_PID_DIR]="$MH_SCRATCH_DIR/pids"
 EOF
 
 source $HADOOP_CONF_DIR/myhadoop.conf
@@ -189,23 +249,23 @@ export JAVA_HOME=$JAVA_HOME
 # Other job-specific environment variables follow:
 EOF
 
-if [ "z$PERSIST_BASE_DIR" != "z" ]; then
+if [ "z$MH_PERSIST_DIR" != "z" ]; then
     ### Link HDFS data directories if persistent mode
     i=0
     for node in $(cat $HADOOP_CONF_DIR/slaves $HADOOP_CONF_DIR/masters | sort -u | head -n $NODES)
     do
-        mkdir -p $PERSIST_BASE_DIR/$i
-        echo "Linking $PERSIST_BASE_DIR/$i to ${config_subs[DFS_DATA_DIR]} on $node"
-        ssh $node "mkdir -p $(dirname ${config_subs[DFS_DATA_DIR]}); ln -s $PERSIST_BASE_DIR/$i ${config_subs[DFS_DATA_DIR]}"
+        mkdir -p $MH_PERSIST_DIR/$i
+        echo "Linking $MH_PERSIST_DIR/$i to ${config_subs[DFS_DATA_DIR]} on $node"
+        ssh $node "mkdir -p $(dirname ${config_subs[DFS_DATA_DIR]}); ln -s $MH_PERSIST_DIR/$i ${config_subs[DFS_DATA_DIR]}"
         let i++
     done
 
     ### Also link namenode data directory so we don't lose metadata on shutdown
     namedir=$(basename ${config_subs[DFS_NAME_DIR]})
-    mkdir -p $PERSIST_BASE_DIR/$namedir
+    mkdir -p $MH_PERSIST_DIR/$namedir
     for node in $(cat $HADOOP_CONF_DIR/masters | sort -u )
     do
-        ssh $node "mkdir -p $(dirname ${config_subs[DFS_NAME_DIR]}); ln -s $PERSIST_BASE_DIR/$namedir ${config_subs[DFS_NAME_DIR]}"
+        ssh $node "mkdir -p $(dirname ${config_subs[DFS_NAME_DIR]}); ln -s $MH_PERSIST_DIR/$namedir ${config_subs[DFS_NAME_DIR]}"
     done
 fi
 

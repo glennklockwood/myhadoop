@@ -51,10 +51,11 @@ where
 The examples/ directory contains torque.qsub which illustrates how this
 would look in practice.
 
-Before calling myhadoop-configure.sh, you MUST have HADOOP_HOME and JAVA_HOME
-defined in your environment.  myhadoop-configure.sh will look in 
-$HADOOP_HOME/conf for the configuration templates it will use for your 
-personal Hadoop cluster.
+Before calling myhadoop-configure.sh, you MUST have JAVA_HOME defined in your 
+environment and HADOOP_HOME defined in either your environment or your
+myhadoop/etc/myhadoop.conf file.  myhadoop-configure.sh will look in 
+$HADOOP_HOME/conf for the configuration templates it will use for your personal
+Hadoop cluster.
 
 ### myhadoop-cleanup.sh
 
@@ -75,17 +76,9 @@ run it, and create a file called "setenv.sourceme" that contains all of the
 instructions a user will need to connect to his or her newly spawned Hadoop
 cluster and begin using it.
 
-The idea behind myhadoop-bootstrap is that it can be preconfigured once by a
-systems administrator for the entire system, and all users will then be able
-to create Hadoop clusters with a single command.
-
-This script also contains the modifications necessary to use Hadoop with an
-IP over InfiniBand interface.
-
-The examples/ directory contains torque-bootstrap.qsub that illustrates how
-a user may use myhadoop-boostrap.sh in all supported batch environment.  He or 
-she simply has to submit this script and wait for "setenv.sourceme" to appear 
-in his or her directory.  Once it appears, he or she can "cat" the file and 
-follow the instructions contained within to get to an environment where he
-or she can begin interacting with his or her cluster using the "hadoop"
-command.
+The examples/ directory contains bootstrap.qsub that illustrates how a user may 
+use myhadoop-boostrap.sh in all supported batch environments.  He or she simply
+has to submit this script and wait for "setenv.sourceme" to appear in his or 
+her directory.  Once it appears, he or she can "cat" the file and follow the 
+instructions contained within to get to an environment where he or she can 
+begin interacting with his or her cluster using the "hadoop" command.
