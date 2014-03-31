@@ -32,7 +32,7 @@ HADOOP_HOME=/home/glock/hadoop/hadoop-1.2.1
 #   "node-0-1" can be accessed via IP over InfiniBand by "node-0-1.ibnet0",
 #   the transform would be "s/$/.ibnet0/"
 #
-MH_IPOIB_TRANSFORM='s/$/.ibnet0/'
+MH_IPOIB_TRANSFORM='s/\\([^.]*\\).*$/\\1.ibnet0/'
 
 ################################################################################
 # Variable: MH_SCRATCH_DIR 
@@ -63,4 +63,4 @@ MH_SCRATCH_DIR=/scratch/$USER/$PBS_JOBID
 #
 #   This is the location of the user's per-job Hadoop configuration directory.  
 #
-HADOOP_CONF_DIR=$HOME/hadoop-conf.$(cut -d. -f1 <<< $PBS_JOBID)
+#HADOOP_CONF_DIR=$HOME/hadoop-conf.$(cut -d. -f1 <<< $PBS_JOBID)

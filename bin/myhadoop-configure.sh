@@ -290,3 +290,39 @@ if [ ! -e ${config_subs[DFS_NAME_DIR]}/current ]; then
     mh_print "Unknown Hadoop version.  You must format namenode manually."
   fi
 fi
+
+### Enable Spark support if SPARK_HOME is defined
+if [ "z$SPARK_HOME" != "z" ]; then
+  mh_print " "
+  mh_print "Enabling experimental Spark support"
+  if [ "z$SPARK_CONF_DIR" == "z" ]; then
+    SPARK_CONF_DIR=$HADOOP_CONF_DIR/spark
+  fi
+  mh_print "Using SPARK_CONF_DIR=$SPARK_CONF_DIR"
+  mh_print " "
+
+  mkdir -p $SPARK_CONF_DIR
+  cp $SPARK_HOME/conf/* $SPARK_CONF_DIR/
+  cp $HADOOP_CONF_DIR/slaves $SPARK_CONF_DIR/slaves
+
+  cat <<EOF >> $SPARK_CONF_DIR/spark-env.sh
+export SPARK_CONF_DIR=$SPARK_CONF_DIR
+export SPARK_MASTER_IP=$MASTER_NODE
+export SPARK_MASTER_PORT=7077
+export SPARK_WORKER_DIR=$MH_SCRATCH_DIR/work
+export SPARK_LOG_DIR=$MH_SCRATCH_DIR/logs
+
+### pyspark requires this environment variable be set to work
+export MASTER=spark://$MASTER_NODE:7077
+
+### to prevent Spark from binding to the first address it can find
+export SPARK_LOCAL_IP=\$(sed -e '$MH_IPOIB_TRANSFORM' <<< \$HOSTNAME)
+EOF
+
+cat <<EOF
+To use Spark, you will want to type the following commands:"
+  source $SPARK_CONF_DIR/spark-env.sh
+  $SPARK_HOME/sbin/start-master.sh
+  myspark-start.sh
+EOF
+fi
