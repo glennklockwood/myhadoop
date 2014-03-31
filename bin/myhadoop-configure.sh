@@ -196,7 +196,13 @@ fi
 mkdir -p $HADOOP_CONF_DIR
 
 ### First copy over all default Hadoop configs
-cp $HADOOP_HOME/conf/* $HADOOP_CONF_DIR
+if [ -d $HADOOP_HOME/conf ]; then           # Hadoop 1.x
+  cp $HADOOP_HOME/conf/* $HADOOP_CONF_DIR
+  MH_HADOOP_VERS=1
+elif [ -d $HADOOP_HOME/etc/hadoop ]; then   # Hadoop 2.x
+  cp $HADOOP_HOME/etc/hadoop/* $HADOOP_CONF_DIR
+  MH_HADOOP_VERS=2
+fi
 
 ### Pick the master node as the first node in the nodefile
 MASTER_NODE=$(print_nodelist | /usr/bin/head -n1)
@@ -228,18 +234,23 @@ source $HADOOP_CONF_DIR/myhadoop.conf
 
 ### And actually apply those substitutions:
 for key in "${!config_subs[@]}"; do
-  for xml in mapred-site.xml core-site.xml hdfs-site.xml
+  for xml in mapred-site.xml core-site.xml hdfs-site.xml yarn-site.xml
   do
-    sed -i 's#'$key'#'${config_subs[$key]}'#g' $HADOOP_CONF_DIR/$xml
+    if [ -f $HADOOP_CONF_DIR/$xml ]; then
+      sed -i 's#'$key'#'${config_subs[$key]}'#g' $HADOOP_CONF_DIR/$xml
+    fi
   done
 done
 
 ### A few Hadoop file locations are set via environment variables:
-cat <<EOF >> $HADOOP_CONF_DIR/hadoop-env.sh
+cat << EOF >> $HADOOP_CONF_DIR/hadoop-env.sh
 
 # myHadoop alterations for this job:
 export HADOOP_LOG_DIR=${config_subs[HADOOP_LOG_DIR]}
 export HADOOP_PID_DIR=${config_subs[HADOOP_PID_DIR]}
+export YARN_LOG_DIR=${config_subs[HADOOP_LOG_DIR]} # no effect if using Hadoop 1
+export YARN_PID_DIR=${config_subs[HADOOP_PID_DIR]} # no effect if using Hadoop 1
+export HADOOP_SECURE_DN_PID_DIR=${config_subs[HADOOP_PID_DIR]}
 export HADOOP_HOME_WARN_SUPPRESS=TRUE
 export JAVA_HOME=$JAVA_HOME
 ### Jetty leaves garbage in /tmp no matter what \$TMPDIR is; this is an extreme 
@@ -271,5 +282,11 @@ fi
 
 ### Format HDFS if it does not already exist from persistent mode
 if [ ! -e ${config_subs[DFS_NAME_DIR]}/current ]; then
-  HADOOP_CONF_DIR=$HADOOP_CONF_DIR $HADOOP_HOME/bin/hadoop namenode -format -nonInteractive -force
+  if [ $MH_HADOOP_VERS -eq 1 ]; then
+    HADOOP_CONF_DIR=$HADOOP_CONF_DIR $HADOOP_HOME/bin/hadoop namenode -format -nonInteractive -force
+  elif [ $MH_HADOOP_VERS -eq 2 ]; then
+    HADOOP_CONF_DIR=$HADOOP_CONF_DIR $HADOOP_HOME/bin/hdfs namenode -format
+  else
+    mh_print "Unknown Hadoop version.  You must format namenode manually."
+  fi
 fi
