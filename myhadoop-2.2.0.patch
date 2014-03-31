@@ -1,0 +1,134 @@
+diff -ruN a/core-site.xml b/core-site.xml
+--- a/core-site.xml	2014-03-30 10:25:24.420801062 -0700
++++ b/core-site.xml	2014-03-30 11:47:32.415743269 -0700
+@@ -17,4 +17,15 @@
+ <!-- Put site-specific property overrides in this file. -->
+ 
+ <configuration>
++<property>
++  <name>hadoop.tmp.dir</name>
++  <value>HADOOP_TMP_DIR</value>
++  <description>A base for other temporary directories.</description>
++</property>
++
++<property>
++  <name>fs.defaultFS</name>
++  <value>hdfs://MASTER_NODE:54310</value>
++</property>
++
+ </configuration>
+diff -ruN a/hdfs-site.xml b/hdfs-site.xml
+--- a/hdfs-site.xml	2014-03-30 10:25:24.420801062 -0700
++++ b/hdfs-site.xml	2014-03-30 11:42:31.974815902 -0700
+@@ -18,4 +18,34 @@
+ 
+ <configuration>
+ 
++  <property>
++    <name>dfs.namenode.name.dir</name>
++    <value>DFS_NAME_DIR</value>
++    <description>Determines where on the local filesystem the DFS name node
++      should store the name table.  If this is a comma-delimited list
++      of directories then the name table is replicated in all of the
++      directories, for redundancy. </description>
++    <final>true</final>
++  </property>
++
++  <property>
++    <name>dfs.datanode.data.dir</name>
++    <value>DFS_DATA_DIR</value>
++    <description>Determines where on the local filesystem an DFS data node
++       should store its blocks.  If this is a comma-delimited
++       list of directories, then data will be stored in all named
++       directories, typically on different devices.
++       Directories that do not exist are ignored.
++    </description>
++    <final>true</final>
++  </property>
++
++  <property>
++   <name>dfs.namenode.secondary.http-address</name>
++   <value>MASTER_NODE:50090</value>
++   <description>The secondary namenode http server address and 
++       port.</description>
++   <final>true</final>
++  </property>
++
+ </configuration>
+diff -ruN a/mapred-site.xml b/mapred-site.xml
+--- a/mapred-site.xml	1969-12-31 16:00:00.000000000 -0800
++++ b/mapred-site.xml	2014-03-30 13:52:18.101773941 -0700
+@@ -0,0 +1,28 @@
++<?xml version="1.0"?>
++<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
++<!--
++  Licensed under the Apache License, Version 2.0 (the "License");
++  you may not use this file except in compliance with the License.
++  You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License. See accompanying LICENSE file.
++-->
++
++<!-- Put site-specific property overrides in this file. -->
++
++<configuration>
++
++<property>
++  <name>mapreduce.framework.name</name>
++  <value>yarn</value>
++  <description>The runtime framework for executing MapReduce jobs. Can be one of
++    local, classic or yarn.</description>
++</property>
++
++</configuration>
+diff -ruN a/yarn-site.xml b/yarn-site.xml
+--- a/yarn-site.xml	2014-03-30 10:25:24.420801062 -0700
++++ b/yarn-site.xml	2014-03-30 13:52:09.947889010 -0700
+@@ -15,5 +15,41 @@
+ <configuration>
+ 
+ <!-- Site specific YARN configuration properties -->
++  <property>
++    <name>yarn.resourcemanager.hostname</name>
++    <value>MASTER_NODE</value>
++    <description>The hostname of the RM.</description>
++    <final>true</final>
++  </property>
++
++  <property>
++    <name>yarn.nodemanager.local-dirs</name>
++    <value>MAPRED_LOCAL_DIR</value>
++    <description>The hostname of the RM.  
++        Default: ${hadoop.tmp.dir}/nm-local-dir</description>
++  </property>
++
++<!-- yarn.nodemanager.log-dirs defaults to ${yarn.log.dir}/userlogs, where 
++     yarn.log.dir is set by yarn-env.sh via the YARN_LOG_DIR environment 
++     variable -->
++
++<!-- these are necessary for mapreduce to work with YARN -->
++  <property>
++    <name>yarn.nodemanager.aux-services</name>
++    <value>mapreduce_shuffle</value>
++    <description>The valid service name should only contain a-zA-Z0-9_ and can 
++        not start with numbers.  Default: none</description>
++  </property>
++
++<!-- 
++  <property>
++    <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
++    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
++    <description>Java class to handle the shuffle stage of 
++        mapreduce.  
++        Default:  org.apache.hadoop.mapred.ShuffleHandler</description>
++  </property>
++-->
++
+ 
+ </configuration>
