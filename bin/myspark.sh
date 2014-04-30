@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+################################################################################
+# myspark.sh - start or stop a standalone Spark cluster.  Cannot use the control
+#   scripts provided with Spark 0.9.0 due to various bugs and lack of 
+#   functionality necessary to create transient Spark clusters.
+#
+#   Glenn K. Lockwood, San Diego Supercomputer Center               April 2014
+################################################################################
+
+function mh_print {
+    echo -e "mySpark: $@"
+}
+
+if [ "z$1" == "zstart" ]; then
+  action="Starting"
+elif [ "z$1" == "ztop" ]; then
+  action="Stopping"
+else
+  echo "Syntax: $0 <start|stop>" >&2
+  exit 1
+fi
+
+### Establish the slaves file containing our worker nodes
+if [ "z$SPARK_SLAVES" == "z" ]; then
+  SPARK_SLAVES=$SPARK_CONF_DIR/slaves
+fi
+mh_print "Using $SPARK_SLAVES as our slaves file"
+
+### Read in our cluster's unique configuration variables
+source $SPARK_CONF_DIR/spark-env.sh
+mh_print "Reading in $SPARK_CONF_DIR/spark-env.sh as our slaves file"
+
+### mySpark does not currently support multiple worker instances per node
+if [ "$action" == "Starting" ]; then
+  cmd="$SPARK_HOME/sbin/spark-daemon.sh --config $SPARK_CONF_DIR start org.apache.spark.deploy.worker.Worker 1 spark://$SPARK_MASTER_IP:$SPARK_MASTER_PORT"
+elif [ "$action" == "Stopping" ]; then
+  cmd="$SPARK_HOME/sbin/spark-daemon.sh --config $SPARK_CONF_DIR stop org.apache.spark.deploy.worker.Worker 1"
+else
+fi
+
+### Apply action across all slave nodes
+for slave in $(sort -u $SPARK_SLAVES)
+do
+  mh_print "$action worker on $slave:\n  $cmd"
+  ssh $slave "$cmd"
+done

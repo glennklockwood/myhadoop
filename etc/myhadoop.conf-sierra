@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+################################################################################
+# etc/myhadoop.conf - a list of environment variables that can be set system-
+#   wide to alter the default behavior of a myHadoop installation.  These will
+#   be overridden by anything provided by the user as a myHadoop option when
+#   myhadoop-configure.sh is executed.  However these will NOT be overridden
+#   by anything in the user's environment.
+#
+# This particular configuration is designed for FutureGrid's Sierra resource
+#
+#  Glenn K. Lockwood, San Diego Supercomputer Center                April 2014
+################################################################################
+
+################################################################################
+# Variable: HADOOP_HOME 
+# Command-line override: -h
+# 
+#   This is the base installation of Hadoop on the system.  Note that if
+#   this is defined here, it will override any HADOOP_HOME that may exist in
+#   the user's environment, effectively railroading the user into using a
+#   specific Hadoop version when using this installation of myHadoop unless
+#   they override on the command line.
+#
+HADOOP_HOME=/N/u/glock/apps/hadoop-2.2.0
+
+################################################################################
+# Variable: MH_IPOIB_TRANSFORM 
+# Command-line override: -i
+#  
+#   This is the regex substituion to be applied to all of the hosts in the node 
+#   list before constructing the masters/slaves list.  For example, if 
+#   "node-0-1" can be accessed via IP over InfiniBand by "node-0-1.ibnet0",
+#   the transform would be "s/$/.ibnet0/"
+#
+MH_IPOIB_TRANSFORM='s/\\([^.]*\\).*$/\\1ib/'
+
+################################################################################
+# Variable: MH_SCRATCH_DIR 
+# Command-line override: -s
+#
+#   This is the lcoation of the node-local scratch space for a system.  You   
+#   may include variables such as $USER and $SLURM_JOBID which will be evaluated 
+#   within the context of the user's myHadoop execution environment.  This is 
+#   normally defined using the "-s" option when calling myhadoop-configure.
+#
+MH_SCRATCH_DIR=/scratch/$USER/$PBS_JOBID
+
+################################################################################
+# Variable: MH_PERSIST_DIR
+# Command-line override: -p
+#
+#   This specifies the location of a shared filesystem on which persistent 
+#   myHadoop instantiations should be stored when myhadoop-configure is called 
+#   in persistent mode.  This is normally specified with the "-p" option when 
+#   running myhadoop-configure.  NOTE THAT IF YOU SET THIS, ALL JOBS WILL BE 
+#   RUN IN PERSISTENT MODE unless the user explicitly requests -p ''
+#
+#MH_PERSIST_DIR=
+
+################################################################################
+# Variable: HADOOP_CONF_DIR 
+# Command-line override: -c
+#
+#   This is the location of the user's per-job Hadoop configuration directory.  
+#
+#HADOOP_CONF_DIR=$HOME/hadoop-conf.$(cut -d. -f1 <<< $PBS_JOBID)
