@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ################################################################################
 # myhadoop-configure.sh - establish a valid $HADOOP_CONF_DIR with all of the
 #   configurations necessary to start a Hadoop cluster from within a HPC batch

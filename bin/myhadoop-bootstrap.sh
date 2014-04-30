@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ################################################################################
 #  myhadoop-bootstrap - call from within a job script to do the entire cluster
 #    setup in a hands-off fashion.  This script is admittedly much less useful
