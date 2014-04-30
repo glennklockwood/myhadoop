@@ -13,7 +13,7 @@ function mh_print {
 
 if [ "z$1" == "zstart" ]; then
   action="Starting"
-elif [ "z$1" == "ztop" ]; then
+elif [ "z$1" == "zstop" ]; then
   action="Stopping"
 else
   echo "Syntax: $0 <start|stop>" >&2
@@ -32,15 +32,19 @@ mh_print "Reading in $SPARK_CONF_DIR/spark-env.sh as our slaves file"
 
 ### mySpark does not currently support multiple worker instances per node
 if [ "$action" == "Starting" ]; then
-  cmd="$SPARK_HOME/sbin/spark-daemon.sh --config $SPARK_CONF_DIR start org.apache.spark.deploy.worker.Worker 1 spark://$SPARK_MASTER_IP:$SPARK_MASTER_PORT"
+  cmd_ma="$SPARK_HOME/sbin/start-master.sh"
+  cmd_sl="$SPARK_HOME/sbin/spark-daemon.sh --config $SPARK_CONF_DIR start org.apache.spark.deploy.worker.Worker 1 spark://$SPARK_MASTER_IP:$SPARK_MASTER_PORT"
 elif [ "$action" == "Stopping" ]; then
-  cmd="$SPARK_HOME/sbin/spark-daemon.sh --config $SPARK_CONF_DIR stop org.apache.spark.deploy.worker.Worker 1"
+  cmd_ma="$SPARK_HOME/sbin/stop-master.sh"
+  cmd_sl="$SPARK_HOME/sbin/spark-daemon.sh --config $SPARK_CONF_DIR stop org.apache.spark.deploy.worker.Worker 1"
 else
+  exit 1
 fi
 
-### Apply action across all slave nodes
+### Apply action across master + slave nodes
+$cmd_ma
 for slave in $(sort -u $SPARK_SLAVES)
 do
-  mh_print "$action worker on $slave:\n  $cmd"
-  ssh $slave "$cmd"
+  mh_print "$action worker on $slave:\n  $cmd_sl"
+  ssh $slave "$cmd_sl"
 done

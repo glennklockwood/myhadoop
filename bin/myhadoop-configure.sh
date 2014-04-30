@@ -322,7 +322,6 @@ EOF
 cat <<EOF
 To use Spark, you will want to type the following commands:"
   source $SPARK_CONF_DIR/spark-env.sh
-  $SPARK_HOME/sbin/start-master.sh
-  myspark-start.sh
+  myspark start
 EOF
 fi
