@@ -25,7 +25,7 @@ diff -rup a/core-site.xml b/core-site.xml
 diff -rup a/hdfs-site.xml b/hdfs-site.xml
 --- a/hdfs-site.xml	2013-07-22 15:26:38.000000000 -0700
 +++ b/hdfs-site.xml	2014-02-09 11:50:08.689450937 -0800
-@@ -5,4 +5,26 @@
+@@ -5,4 +5,45 @@
  
  <configuration>
  
@@ -51,11 +51,30 @@ diff -rup a/hdfs-site.xml b/hdfs-site.xml
 +    <final>true</final>
 +  </property>
 +
++  <property>
++    <name>dfs.replication</name>
++    <value>DFS_REPLICATION</value>
++    <description>HDFS is partly designed to allow storage failures and uses
++       replication for this. Since either your data on myhadoop jobs is only 
++       supposed to live through a single run or you can use persistent data
++       that will most likely run on solid hardware it is quite save to keep
++       replication at 1 and reduce the IO overhead.
++    </description>
++  </property>
++
++  <property>
++    <name>dfs.block.size</name>
++    <value>DFS_BLOCK_SIZE</value>
++    <description>The HDFS block size defines the size of the parts in which 
++       the HDFS files will be divided and distributed over the data nodes.
++  </description>
++  </property>
++
  </configuration>
 diff -rup a/mapred-site.xml b/mapred-site.xml
 --- a/mapred-site.xml	2013-07-22 15:26:38.000000000 -0700
 +++ b/mapred-site.xml	2014-02-09 11:50:08.695451185 -0800
-@@ -5,4 +5,19 @@
+@@ -5,4 +5,49 @@
  
  <configuration>
  
@@ -72,6 +91,36 @@ diff -rup a/mapred-site.xml b/mapred-site.xml
 +  <name>mapred.local.dir</name>
 +  <value>MAPRED_LOCAL_DIR</value>
 +  <final>true</final>
++</property>
++
++<property>
++  <name>mapred.tasktracker.map.tasks.maximum</name>
++  <value>MAPRED_TASKTRACKER_MAP_TASKS_MAXIMUM</value>
++  <description>The MH_MAP_TASKS_MAXIMUM will set the maximum amount of 
++     MAP tasks to be started on a single TASK node, this is either CPU
++     or memory bound.</description>
++</property>
++
++<property>
++  <name>mapred.tasktracker.reduce.tasks.maximum</name>
++  <value>MAPRED_TASKTRACKER_REDUCE_TASKS_MAXIMUM</value>
++  <description>The MH_REDUCE_TASKS_MAXIMUM will set the maximum amount 
++     of REDUCE tasks to be started on a single TASK node, this is most
++     likely memory bound.</description>
++</property>
++
++<property>
++  <name>mapred.map.tasks</name>
++  <value>MAPRED_MAP_TASKS</value>
++  <description>The MH_MAP_TASKS is used to hint the application of the 
++     total amount of MAP tasks that can be run on the cluster.</description>
++</property>
++
++<property>
++  <name>mapred.reduce.tasks</name>
++  <value>MAPRED_REDUCE_TASKS</value>
++  <description>The MH_REDUCE_TASKS is used to hint the application of 
++     the total amount of REDUCE tasks that can be run on the cluster.</description>
 +</property>
 +
  </configuration>
