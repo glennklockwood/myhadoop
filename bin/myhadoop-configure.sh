@@ -7,6 +7,7 @@
 #
 #   Glenn K. Lockwood, San Diego Supercomputer Center
 #   Sriram Krishnan, San Diego Supercomputer Center              Feburary 2014
+#   tuning added by Hugo Meiland, Bull                           June 2014
 ################################################################################
 
 MH_HOME="$(dirname $(readlink -f $0))/.."
@@ -226,6 +227,12 @@ config_subs[MAPRED_LOCAL_DIR]="$MH_SCRATCH_DIR/mapred_scratch"
 config_subs[HADOOP_TMP_DIR]="$MH_SCRATCH_DIR/tmp"
 config_subs[DFS_NAME_DIR]="$MH_SCRATCH_DIR/namenode_data"
 config_subs[DFS_DATA_DIR]="$MH_SCRATCH_DIR/hdfs_data"
+config_subs[DFS_REPLICATION]="$MH_DFS_REPLICATION"
+config_subs[DFS_BLOCK_SIZE]="$MH_DFS_BLOCK_SIZE"
+config_subs[MAPRED_TASKTRACKER_MAP_TASKS_MAXIMUM]="$MH_MAP_TASKS_MAXIMUM"
+config_subs[MAPRED_TASK_TRACKER_REDUCE_TASKS_MAXIMUM]="$MH_REDUCE_TASKS_MAXIMUM"
+config_subs[MAPRED_MAP_TASKS]="$MH_MAP_TASKS"
+config_subs[MAPRED_REDUCE_TASKS]="$MH_REDUCE_TASKS"
 config_subs[HADOOP_LOG_DIR]="$MH_SCRATCH_DIR/logs"
 config_subs[HADOOP_PID_DIR]="$MH_SCRATCH_DIR/pids"
 EOF

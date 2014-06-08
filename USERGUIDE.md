@@ -365,3 +365,41 @@ variables:
    propogate through the entire Hadoop configuration process
 3. MH_IPOIB_TRANSFORM - sets the transformation to ensure that Hadoop
    runs over the IP over InfiniBand interfaces.
+
+### Hadoop tuning through etc/myhadoop.conf
+
+After running the first hello-world samples for myHadoop on a HPC cluster, it is
+very likely you want to see how it's performance is actually doing. Well the default
+performance of Hadoop is most likely not really using the big iron it is running on
+at the moment. Therefore a couple of tuning varables have been added to make sure 
+Hadoop is running more tuned to it's new home.
+
+# HDFS
+
+Hadoop was designed to run in an environment where failure was deemed common. One of
+the neat tricks here is to use a default replication factor of 3 on alle the HDFS blocks.
+With myHadoop you have the choice of either running in a non-persistent environment 
+where this replication is not very usefull since the HDFS storage is deleted right after 
+taking the cluster down. In the case of using persistent storage, on something like 
+Lustre or GPFS, your friendly cluster admins will have taken plenty of care that this
+storage is actually secure. In both cases, it is save to choose a replication factor of 1
+to lower the total amount of IO.
+
+An other option to play with is the HDFS block size. The best block size depends very 
+much of the amount of data being used in your job and the amount of mappers/reducers that
+are available to handle this data. When handling larger data sizes, going up from the 
+default 64MB to 128MB or 256MB may give you better performance.
+
+# mapper/reducers
+
+To be able to use the multi-core nodes you may be using, Hadoop must be told it may
+increase the amount of mappers/reducers to more than the default 2 it is starting. 
+In the example etc/myhadoop.conf-tuning the script is checking the amount of cores
+on the node available through the resource managers variable, and uses half of them for
+the mappers and 1/4 for the reducers. The data and task manager on each node require each
+a core, but it is save to play around with these verables to optimize.
+
+Also a hint is being given to Hadoop about the total amount of mappers/reducers available
+for a job based upon the above variables times the amount of nodes on which myHadoop is running.
+Especially on a HPC cluster it only takes on variable to change this is a submit script, so
+it makes sense to have Hadoop being aware of this.     
