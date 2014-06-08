@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+################################################################################
+# etc/myhadoop.conf - a list of environment variables that can be set system-
+#   wide to alter the default behavior of a myHadoop installation.  These will
+#   be overridden by anything provided by the user as a myHadoop option when
+#   myhadoop-configure.sh is executed.  However these will NOT be overridden
+#   by anything in the user's environment.
+#
+#  Glenn K. Lockwood, San Diego Supercomputer Center             February 2014
+#  tuning added by Hugo Meiland, Bull                            June 2014
+################################################################################
+
+################################################################################
+# Variable: HADOOP_HOME 
+# Command-line override: -h
+# 
+#   This is the base installation of Hadoop on the system.  Note that if
+#   this is defined here, it will override any HADOOP_HOME that may exist in
+#   the user's environment, effectively railroading the user into using a
+#   specific Hadoop version when using this installation of myHadoop unless
+#   they override on the command line.
+#
+HADOOP_HOME=/home/bull2/hadoop/hadoop-1.2.1/
+
+################################################################################
+# Variable: MH_IPOIB_TRANSFORM 
+# Command-line override: -i
+#  
+#   This is the regex substituion to be applied to all of the hosts in the node 
+#   list before constructing the masters/slaves list.  For example, if 
+#   "node-0-1" can be accessed via IP over InfiniBand by "node-0-1.ibnet0",
+#   the transform would be "s/$/.ibnet0/"
+#
+#MH_IPOIB_TRANSFORM='s/$/-ic1/'
+
+################################################################################
+# Variable: MH_SCRATCH_DIR 
+# Command-line override: -s
+#
+#   This is the lcoation of the node-local scratch space for a system.  You   
+#   may include variables such as $USER and $SLURM_JOBID which will be evaluated 
+#   within the context of the user's myHadoop execution environment.  This is 
+#   normally defined using the "-s" option when calling myhadoop-configure.
+#
+MH_SCRATCH_DIR=$TMPDIR/$USER
+
+################################################################################
+# Variable: MH_PERSIST_DIR
+# Command-line override: -p
+#
+#   This specifies the location of a shared filesystem on which persistent 
+#   myHadoop instantiations should be stored when myhadoop-configure is called 
+#   in persistent mode.  This is normally specified with the "-p" option when 
+#   running myhadoop-configure.  NOTE THAT IF YOU SET THIS, ALL JOBS WILL BE 
+#   RUN IN PERSISTENT MODE unless the user explicitly requests -p ''
+#
+#MH_PERSIST_DIR=/scratch/shared/$USER/hdfs
+
+################################################################################
+# Variable: HADOOP_CONF_DIR 
+# Command-line override: -c
+#
+#   This is the location of the user's per-job Hadoop configuration directory.  
+#
+HADOOP_CONF_DIR=$HOME/hadoop/hadoop-conf.$SLURM_JOBID
+
+################################################################################
+# Performance tuning
+#
+# The default Hadoop settings are designed to allow Hadoop to work on a single
+# machine, probably a VM. Since most likely your machines nodes will have loads 
+# of cores available, the settings below will allow you to use these, and will even try
+# to read some of your machine info to tune itself. The default settings have been
+# chosen rather save to make sure your first jobs will be succesfull, but feel free
+# to tune.
+# 
+################################################################################
+# Variable: MH_DFS_REPLICATION
+# Command-line override: none
+#
+# HDFS is partly designed to allow storage failures and uses replication for this.
+# Since either your data on myhadoop jobs is only supposed to live through a single run
+# or you can use persistent data that will most likely run on solid hardware it is 
+# quite save to keep replication at 1 and reduce the IO overhead.
+MH_DFS_REPLICATION=1
+
+################################################################################
+# Variable: MH_DFS_BLOCK_SIZE
+# Command-line override: none
+#
+# The HDFS block size defines the size of the parts in which the HDFS files will
+# be divided and distributed over the data nodes.
+MH_DFS_BLOCK_SIZE=`echo "256 * 1024 * 1024" | bc`
+
+################################################################################
+# Variable: MH_MAP_TASKS_MAXIMUM
+# Command-line override: none
+#
+# The MH_MAP_TASKS_MAXIMUM will set the maximum amount of MAP tasks to be started
+# on a single TASK node, this is either CPU or memory bound. The default setting
+# here to use half the available cores is quite save, this can easily be tweaked
+# up to "available cores - 3", where a couple of cores are required to run the
+# TASK manager and the DATA manager. The example checks by the SLURM resource 
+# manager the amount of cores that are available, please provide me with an example
+# for other resource managers to add... (PBS, SGE etc...)  
+MH_MAP_TASKS_MAXIMUM=`echo "$SLURM_CPUS_ON_NODE / 2" | bc`
+
+################################################################################
+# Variable: MH_REDUCE_TASKS_MAXIMUM
+# Command-line override: none
+#
+# The MH_REDUCE_TASKS_MAXIMUM will set the maximum amount of REDUCE tasks to be started
+# on a single TASK node, this is most likely memory bound.
+MH_REDUCE_TASKS_MAXIMUM=`echo "$SLURM_CPUS_ON_NODE / 4" | bc`
+
+################################################################################
+# Variable: MH_MAP_TASKS
+# Command-line override: none
+#
+# The MH_MAP_TASKS is used to hint the application of the total amount of MAP
+# tasks that can be run on the cluster. This is typically something that will
+# change depending of the amount of nodes you can use for a job. The setting below
+# will use the SLURM variable to check how many nodes are available and defines this
+# setting accordingly.  
+MH_MAP_TASKS=`echo "$SLURM_NNODES * $MH_MAP_TASKS_MAXIMUM" | bc`
+
+################################################################################
+# Variable: MH_REDUCE_TASKS
+# Command-line override: none
+#
+# The MH_REDUCE_TASKS is used to hint the application of the total amount of REDUCE
+# tasks that can be run on the cluster. This is typically something that will
+# change depending of the amount of nodes you can use for a job. The setting below
+# will use the SLURM variable to check how many nodes are available and defines this
+# setting accordingly.  
+MH_REDUCE_TASKS=`echo "$SLURM_NNODES * $MH_REDUCE_TASKS_MAXIMUM" | bc`
