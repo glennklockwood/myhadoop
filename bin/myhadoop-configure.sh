@@ -312,8 +312,13 @@ export SPARK_MASTER_PORT=7077
 export SPARK_WORKER_DIR=$MH_SCRATCH_DIR/work
 export SPARK_LOG_DIR=$MH_SCRATCH_DIR/logs
 
-### pyspark requires this environment variable be set to work
+### pyspark shell requires this environment variable be set to work
 export MASTER=spark://$MASTER_NODE:7077
+
+### push out the local environment to all slaves so that any loaded modules
+### from the user environment are honored by the execution environment
+export PATH=$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 ### to prevent Spark from binding to the first address it can find
 export SPARK_LOCAL_IP=\$(sed -e '$MH_IPOIB_TRANSFORM' <<< \$HOSTNAME)
