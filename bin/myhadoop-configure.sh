@@ -10,6 +10,12 @@
 #   tuning added by Hugo Meiland, Bull                           June 2014
 ################################################################################
 
+### declare -A will not work on bash 3 (default on EL5); fail gracefully
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then 
+    echo "myHadoop requires bash version 4 but you have version ${BASH_VERSINFO[0]}.  Aborting." >&2
+    exit 1
+fi
+
 MH_HOME="$(dirname $(readlink -f $0))/.."
 
 function mh_print {
