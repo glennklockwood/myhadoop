@@ -303,3 +303,57 @@ if [ ! -e ${config_subs[DFS_NAME_DIR]}/current ]; then
     mh_print "Unknown Hadoop version.  You must format namenode manually."
   fi
 fi
+
+### Enable HBase support if HBASE_HOME is defined
+if [ "z$HBASE_HOME" != "z" ]; then
+
+  if [ $NODES -lt 3 ]; then
+    echo "For HBASE use minimal 3 nodes, aborting ..." >&2
+    print_usage
+    exit 1
+  fi
+  mh_print " "
+  mh_print "Enabling experimental HBase support"
+  if [ "z$HBASE_CONF_DIR" == "z" ]; then
+    HBASE_CONF_DIR=$HADOOP_CONF_DIR/hbase
+  fi
+  mh_print "Using HBASE_CONF_DIR=$HBASE_CONF_DIR"
+  mh_print " "
+
+  mkdir -p $HBASE_CONF_DIR
+  cp $HBASE_HOME/conf/* $HBASE_CONF_DIR/
+  cp $HADOOP_CONF_DIR/slaves $HBASE_CONF_DIR/regionservers
+  FIRST_NODE=$(cat $HADOOP_CONF_DIR/slaves | /usr/bin/head -n1)
+  SECOND_NODE=$(cat $HADOOP_CONF_DIR/slaves | /usr/bin/head -n2 | /usr/bin/tail -n1)  
+  THIRD_NODE=$(cat $HADOOP_CONF_DIR/slaves | /usr/bin/head -n3 | /usr/bin/tail -n1)  
+  
+  mh_print "ZOOKEEPER_QUORUM= $FIRST_NODE,$SECOND_NODE,$THIRD_NODE"
+  mh_print " "
+
+cat <<EOF > $HBASE_CONF_DIR/myhbase.conf
+
+declare -A config_hbase_subs
+config_hbase_subs[NAME_NODE]="$MASTER_NODE"
+config_hbase_subs[ZOOKEEPER_DATADIR]="$MH_SCRATCH_DIR/zookeeper"
+config_hbase_subs[ZOOKEEPER_QUORUM]="$FIRST_NODE,$SECOND_NODE,$THIRD_NODE"
+EOF
+
+source $HBASE_CONF_DIR/myhbase.conf
+
+### And actually apply those substitutions:
+for key in "${!config_hbase_subs[@]}"; do
+  for xml in hbase-site.xml
+  do
+    if [ -f $HBASE_CONF_DIR/$xml ]; then
+      sed -i 's#'$key'#'${config_hbase_subs[$key]}'#g' $HBASE_CONF_DIR/$xml
+    fi
+  done
+done
+
+cat << EOF >> $HBASE_CONF_DIR/hbase-env.sh
+
+export JAVA_HOME=$JAVA_HOME
+EOF
+
+
+fi
