@@ -353,7 +353,14 @@ done
 cat << EOF >> $HBASE_CONF_DIR/hbase-env.sh
 
 export JAVA_HOME=$JAVA_HOME
+export HBASE_LOG_DIR=${config_hbase_subs[HBASE_LOG_DIR]}
+export HBASE_PID_DIR=${config_hbase_subs[HBASE_PID_DIR]}
 EOF
 
+cat <<EOF
+To use HBase, you will want to type the following commands:"
+  export HBASE_CONF_DIR=$HBASE_CONF_DIR
+  $HBASE_HOME/bin/start-hbase.sh
+EOF
 
 fi
