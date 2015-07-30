@@ -336,6 +336,8 @@ declare -A config_hbase_subs
 config_hbase_subs[NAME_NODE]="$MASTER_NODE"
 config_hbase_subs[ZOOKEEPER_DATADIR]="$MH_SCRATCH_DIR/zookeeper"
 config_hbase_subs[ZOOKEEPER_QUORUM]="$FIRST_NODE,$SECOND_NODE,$THIRD_NODE"
+config_hbase_subs[HBASE_LOG_DIR]="$MH_SCRATCH_DIR/logs"
+config_hbase_subs[HBASE_PID_DIR]="$MH_SCRATCH_DIR/pid"
 EOF
 
 source $HBASE_CONF_DIR/myhbase.conf
