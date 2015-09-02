@@ -1,0 +1,23 @@
+--- a/hbase-site.xml	2015-07-29 14:08:52.690402000 +0200
++++ b/hbase-site.xml	2015-07-29 14:06:13.547349000 +0200
+@@ -21,4 +21,20 @@
+  */
+ -->
+ <configuration>
++<property>
++  <name>hbase.cluster.distributed</name>
++  <value>true</value>
++</property>
++<property>
++  <name>hbase.rootdir</name>
++  <value>hdfs://NAME_NODE:54310/hbase</value>
++</property>
++<property>
++  <name>hbase.zookeeper.quorum</name>
++  <value>ZOOKEEPER_QUORUM</value>
++</property>
++<property>
++   <name>hbase.zookeeper.property.dataDir</name>
++   <value>ZOOKEEPER_DATADIR</value>
++</property>
+ </configuration>
