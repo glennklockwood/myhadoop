@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ################################################################################
 # myhadoop-configure.sh - establish a valid $HADOOP_CONF_DIR with all of the
 #   configurations necessary to start a Hadoop cluster from within a HPC batch
@@ -304,6 +304,46 @@ if [ ! -e ${config_subs[DFS_NAME_DIR]}/current ]; then
   fi
 fi
 
+### Enable Spark support if SPARK_HOME is defined
+if [ "z$SPARK_HOME" != "z" ]; then
+  mh_print " "
+  mh_print "Enabling experimental Spark support"
+  if [ "z$SPARK_CONF_DIR" == "z" ]; then
+    SPARK_CONF_DIR=$HADOOP_CONF_DIR/spark
+  fi
+  mh_print "Using SPARK_CONF_DIR=$SPARK_CONF_DIR"
+  mh_print " "
+
+  mkdir -p $SPARK_CONF_DIR
+  cp $SPARK_HOME/conf/* $SPARK_CONF_DIR/
+  cp $HADOOP_CONF_DIR/slaves $SPARK_CONF_DIR/slaves
+
+  cat <<EOF >> $SPARK_CONF_DIR/spark-env.sh
+export SPARK_CONF_DIR=$SPARK_CONF_DIR
+export SPARK_MASTER_IP=$MASTER_NODE
+export SPARK_MASTER_PORT=7077
+export SPARK_WORKER_DIR=$MH_SCRATCH_DIR/work
+export SPARK_LOG_DIR=$MH_SCRATCH_DIR/logs
+
+### pyspark shell requires this environment variable be set to work
+export MASTER=spark://$MASTER_NODE:7077
+
+### push out the local environment to all slaves so that any loaded modules
+### from the user environment are honored by the execution environment
+export PATH=$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+
+### to prevent Spark from binding to the first address it can find
+export SPARK_LOCAL_IP=\$(sed -e '$MH_IPOIB_TRANSFORM' <<< \$HOSTNAME)
+EOF
+
+cat <<EOF
+To use Spark, you will want to type the following commands:"
+  source $SPARK_CONF_DIR/spark-env.sh
+  myspark start
+EOF
+fi
+
 ### Enable HBase support if HBASE_HOME is defined
 if [ "z$HBASE_HOME" != "z" ]; then
 
@@ -330,8 +370,7 @@ if [ "z$HBASE_HOME" != "z" ]; then
   mh_print "ZOOKEEPER_QUORUM= $FIRST_NODE,$SECOND_NODE,$THIRD_NODE"
   mh_print " "
 
-cat <<EOF > $HBASE_CONF_DIR/myhbase.conf
-
+  cat <<EOF > $HBASE_CONF_DIR/myhbase.conf
 declare -A config_hbase_subs
 config_hbase_subs[NAME_NODE]="$MASTER_NODE"
 config_hbase_subs[ZOOKEEPER_DATADIR]="$MH_SCRATCH_DIR/zookeeper"
@@ -340,29 +379,27 @@ config_hbase_subs[HBASE_LOG_DIR]="$MH_SCRATCH_DIR/logs"
 config_hbase_subs[HBASE_PID_DIR]="$MH_SCRATCH_DIR/pids"
 EOF
 
-source $HBASE_CONF_DIR/myhbase.conf
+  source $HBASE_CONF_DIR/myhbase.conf
 
-### And actually apply those substitutions:
-for key in "${!config_hbase_subs[@]}"; do
-  for xml in hbase-site.xml
-  do
-    if [ -f $HBASE_CONF_DIR/$xml ]; then
-      sed -i 's#'$key'#'${config_hbase_subs[$key]}'#g' $HBASE_CONF_DIR/$xml
-    fi
+  ### And actually apply those substitutions:
+  for key in "${!config_hbase_subs[@]}"; do
+    for xml in hbase-site.xml
+    do
+      if [ -f $HBASE_CONF_DIR/$xml ]; then
+        sed -i 's#'$key'#'${config_hbase_subs[$key]}'#g' $HBASE_CONF_DIR/$xml
+      fi
+    done
   done
-done
 
-cat << EOF >> $HBASE_CONF_DIR/hbase-env.sh
-
+  cat << EOF >> $HBASE_CONF_DIR/hbase-env.sh
 export JAVA_HOME=$JAVA_HOME
 export HBASE_LOG_DIR=${config_hbase_subs[HBASE_LOG_DIR]}
 export HBASE_PID_DIR=${config_hbase_subs[HBASE_PID_DIR]}
 EOF
 
-cat <<EOF
+  cat <<EOF
 To use HBase, you will want to type the following commands:"
   export HBASE_CONF_DIR=$HBASE_CONF_DIR
   $HBASE_HOME/bin/start-hbase.sh
 EOF
-
 fi

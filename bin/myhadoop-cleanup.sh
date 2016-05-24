@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ################################################################################
 # myhadoop-cleanup.sh - clean up all of the directories created by running a
 #   Hadoop cluster via myHadoop.

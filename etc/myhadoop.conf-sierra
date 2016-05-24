@@ -6,9 +6,9 @@
 #   myhadoop-configure.sh is executed.  However these will NOT be overridden
 #   by anything in the user's environment.
 #
-# This particular configuration is designed for SDSC's Gordon supercomputer.
+# This particular configuration is designed for FutureGrid's Sierra resource
 #
-#  Glenn K. Lockwood, San Diego Supercomputer Center             February 2014
+#  Glenn K. Lockwood, San Diego Supercomputer Center                April 2014
 ################################################################################
 
 ################################################################################
@@ -21,7 +21,7 @@
 #   specific Hadoop version when using this installation of myHadoop unless
 #   they override on the command line.
 #
-HADOOP_HOME=/home/glock/hadoop/hadoop-1.2.1
+HADOOP_HOME=/N/u/glock/apps/hadoop-2.2.0
 
 ################################################################################
 # Variable: MH_IPOIB_TRANSFORM 
@@ -32,7 +32,7 @@ HADOOP_HOME=/home/glock/hadoop/hadoop-1.2.1
 #   "node-0-1" can be accessed via IP over InfiniBand by "node-0-1.ibnet0",
 #   the transform would be "s/$/.ibnet0/"
 #
-MH_IPOIB_TRANSFORM='s/\\([^.]*\\).*$/\\1.ibnet0/'
+MH_IPOIB_TRANSFORM='s/\\([^.]*\\).*$/\\1ib/'
 
 ################################################################################
 # Variable: MH_SCRATCH_DIR 
@@ -55,7 +55,7 @@ MH_SCRATCH_DIR=/scratch/$USER/$PBS_JOBID
 #   running myhadoop-configure.  NOTE THAT IF YOU SET THIS, ALL JOBS WILL BE 
 #   RUN IN PERSISTENT MODE unless the user explicitly requests -p ''
 #
-#MH_PERSIST_DIR=/lustre/$USER/hdfs
+#MH_PERSIST_DIR=
 
 ################################################################################
 # Variable: HADOOP_CONF_DIR 
