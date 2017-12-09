@@ -16,10 +16,17 @@ distribution is located in /usr/local/hadoop-1.2.1:
     cd /usr/local/hadoop-1.2.1/conf
     patch < /usr/local/myhadoop/myhadoop-1.2.1.patch
 
-That's it.  See USERGUIDE.md for a more detailed installation guide and a brief
+That's it.  
+
+myHadoop also supports Hadoop 2 via the myhadoop-2.2.0.patch file.  This
+patch has been tested to work against Hadoop 2.6, and it may work with newer
+versions as well.
+
+See USERGUIDE.md for a more detailed installation guide and a brief
 introduction to using myHadoop.
 
 ## About myHadoop
+
 This framework comes with three principal runtimes:
 
 * bin/myhadoop-configure.sh - creates a Hadoop configuration set based on the
